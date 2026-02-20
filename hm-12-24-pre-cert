@@ -1,0 +1,740 @@
+<!-- HM A-FRAME ROOF COMPLETE Quote Calculator with Accessories
+     Ready for Divi Code Module -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  .sk-app{max-width:1100px;margin:0 auto;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .sk-card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.10);overflow:hidden;margin-bottom:20px}
+  .sk-head{padding:18px 20px;background:linear-gradient(135deg,#111827,#2563eb);color:#fff}
+  .sk-head h2{margin:0;font-size:20px}
+  .sk-sub{opacity:.9;margin-top:4px;font-size:13px}
+  .sk-body{padding:18px 20px}
+  .sk-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:12px}
+  .sk-section{margin-top:20px;padding-top:20px;border-top:2px solid #e5e7eb}
+  .sk-section-title{font-size:14px;font-weight:900;color:#111827;margin-bottom:12px;text-transform:uppercase}
+  .sk-field label{display:block;font-size:12px;color:#374151;margin-bottom:6px;font-weight:800}
+  .sk-field select,.sk-field input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:12px;font-size:14px}
+  .sk-checkbox{display:flex;align-items:center;gap:8px;margin:8px 0}
+  .sk-checkbox input{width:auto;margin:0}
+  .sk-checkbox label{margin:0;font-weight:normal;cursor:pointer}
+  .sk-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .sk-btn{border:0;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer;font-size:14px}
+  .sk-btn.primary{background:#2563eb;color:#fff}
+  .sk-btn.dark{background:#111827;color:#fff}
+  .sk-btn.light{background:#e5e7eb;color:#111827}
+  .sk-out{margin-top:16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px}
+  .sk-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed #e5e7eb}
+  .sk-row:last-child{border-bottom:0}
+  .sk-row strong{font-weight:900}
+  .sk-subtotal{background:#f0f9ff;padding:8px;border-radius:8px;margin:8px 0}
+  .sk-note{margin-top:10px;font-size:12px;color:#6b7280;line-height:1.35}
+  .sk-badge{display:inline-block;background:#ecfeff;color:#155e75;border:1px solid #a5f3fc;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:900}
+  @media (max-width:980px){.sk-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+
+<div class="sk-app">
+  <div class="sk-card">
+    <div class="sk-head">
+      <h2>HM A-FRAME ROOF Quote Builder <span class="sk-badge">Complete</span></h2>
+      <div class="sk-sub">Base + Snow Load + Height + Walls + Accessories + Clean PDF</div>
+    </div>
+
+    <div class="sk-body">
+      <div class="sk-section-title">Building Configuration</div>
+
+      <div class="sk-grid">
+        <div class="sk-field">
+          <label>Gauge</label>
+          <select id="gauge">
+            <option value="14" selected>14G</option>
+            <option value="12">12G (+15% Base)</option>
+          </select>
+        </div>
+
+        <div class="sk-field">
+          <label>Width (ft)</label>
+          <select id="width_ft">
+            <option>12</option><option>18</option><option selected>20</option><option>22</option><option>24</option>
+          </select>
+        </div>
+
+        <div class="sk-field">
+          <label>Length (ft)</label>
+          <select id="length_ft">
+            <option>20</option><option>25</option><option>30</option><option selected>35</option><option>40</option><option>45</option><option>50</option>
+          </select>
+        </div>
+
+        <div class="sk-field">
+          <label>Leg Height (ft)</label>
+          <select id="height_ft">
+            <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+            <option selected>11</option>
+            <option>12</option><option>13</option><option>14</option><option>15</option><option>16</option>
+            <option>17</option><option>18</option><option>19</option><option>20</option>
+          </select>
+        </div>
+
+        <div class="sk-field">
+          <label>Snow Load</label>
+          <select id="snow_load">
+            <option value="standard" selected>Standard</option>
+            <option value="60">60 LB (+$3,240)</option>
+          </select>
+        </div>
+
+        <div class="sk-field">
+          <label>Sidewalls</label>
+          <select id="sidewall_qty">
+            <option value="0" selected>None (0)</option>
+            <option value="2">Both Sides (2)</option>
+          </select>
+        </div>
+
+        <div class="sk-field">
+          <label>Endwalls</label>
+          <select id="endwall_qty">
+            <option value="0" selected>None (0)</option>
+            <option value="1">One (1)</option>
+            <option value="2">Both (2)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sk-section">
+        <div class="sk-section-title">Accessories & Add-Ons</div>
+
+        <div class="sk-grid">
+          <div class="sk-field">
+            <label>Extra Panels (qty)</label>
+            <select id="extra_panel_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+            </select>
+          </div>
+          <div class="sk-field">
+            <label>Panel Length</label>
+            <select id="extra_panel_length">
+              <option value="21">21'</option><option value="26">26'</option><option value="31">31'</option><option value="36">36'</option><option value="41">41'</option>
+            </select>
+          </div>
+
+          <div class="sk-field">
+            <label>Clear Panels (qty)</label>
+            <select id="clear_panel_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+          <div class="sk-field">
+            <label>Clear Panel Size</label>
+            <select id="clear_panel_length">
+              <option value="12">12'</option><option value="16">16'</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sk-grid" style="margin-top:12px">
+          <div class="sk-field">
+            <label>Garage Roll Up Doors</label>
+            <select id="garage_door_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            </select>
+          </div>
+          <div class="sk-field">
+            <label>Door Size</label>
+            <select id="garage_door_size">
+              <option value="8x7">8×7 ($895)</option>
+              <option value="9x8">9×8 ($895)</option>
+              <option value="10x8">10×8 ($1,095)</option>
+              <option value="10x10">10×10 ($1,295)</option>
+            </select>
+          </div>
+
+          <div class="sk-field">
+            <label>Walk-In Doors (qty)</label>
+            <select id="walkin_door_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option>
+            </select>
+          </div>
+
+          <div class="sk-field">
+            <label>Windows 24"×36" (qty)</label>
+            <select id="window_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sk-grid" style="margin-top:12px">
+          <div class="sk-field">
+            <label>Window Frame Outs</label>
+            <select id="window_frame_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            </select>
+          </div>
+          <div class="sk-field">
+            <label>Door Frame Outs</label>
+            <select id="door_frame_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option>
+            </select>
+          </div>
+          <div class="sk-field">
+            <label>Garage Door Frame Outs</label>
+            <select id="garage_frame_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sk-grid" style="margin-top:12px">
+          <div class="sk-field">
+            <label>Additional Braces</label>
+            <select id="brace_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+              <option value="4">4</option><option value="5">5</option>
+            </select>
+          </div>
+          <div class="sk-field">
+            <label>Brace Size</label>
+            <select id="brace_size">
+              <option value="2">2FT ($10)</option>
+              <option value="3">3FT ($15)</option>
+              <option value="4">4FT ($20)</option>
+            </select>
+          </div>
+
+          <div class="sk-field">
+            <label>Gable Ends (qty)</label>
+            <select id="gable_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option>
+            </select>
+          </div>
+
+          <div class="sk-field">
+            <label>Extra Bows (qty)</label>
+            <select id="bow_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Ground Certification -->
+        <div class="sk-grid" style="margin-top:12px">
+          <div class="sk-field">
+            <label>Ground Certification (qty)</label>
+            <select id="ground_cert_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option>
+            </select>
+          </div>
+
+          <div class="sk-field">
+            <label>Ground Cert Length</label>
+            <select id="ground_cert_length">
+              <option value="21">21'</option>
+              <option value="26">26'</option>
+              <option value="31">31'</option>
+              <option value="36">36'</option>
+              <option value="41">41'</option>
+              <option value="46">46'</option>
+              <option value="51">51'</option>
+            </select>
+          </div>
+
+          <div class="sk-field">
+            <label>Double Leg</label>
+            <div class="sk-checkbox">
+              <input type="checkbox" id="ground_cert_doubleleg">
+              <label for="ground_cert_doubleleg">Apply x2 (Double Leg)</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anchors -->
+        <div class="sk-grid" style="margin-top:12px">
+          <div class="sk-field">
+            <label>Mobile Home Anchors</label>
+            <select id="mobile_anchor_qty">
+              <option value="0" selected>0</option>
+              <option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option>
+            </select>
+          </div>
+          <div class="sk-field">
+            <label>Installation</label>
+            <select id="mobile_anchor_install">
+              <option value="installed">Installed ($35 ea)</option>
+              <option value="not_installed">Not Installed ($30 ea)</option>
+            </select>
+          </div>
+
+          <div class="sk-field">
+            <label>Concrete Anchor Bolts</label>
+            <select id="concrete_bolt_qty">
+              <option value="0" selected>0</option>
+              <option value="4">4</option><option value="8">8</option><option value="12">12</option><option value="16">16</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="sk-actions">
+        <button class="sk-btn primary" id="btnCalc">Calculate Quote</button>
+        <button class="sk-btn light" id="btnReset">Reset All</button>
+        <button class="sk-btn dark" id="btnPDF">Download PDF</button>
+      </div>
+
+      <div class="sk-out" id="output">
+        <div class="sk-row"><span>Status</span><strong>Click Calculate Quote to begin</strong></div>
+      </div>
+
+      <div class="sk-note">
+        <strong>Note:</strong> Windows are $230 each. Snow Load 60 LB adds $3,240.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== BASE (FROM YOUR SCREENSHOT) =====
+   Vertical Roof Style - 14G
+   12G = add 15% to base price
+*/
+const BASE_14G = {
+  "12x20":2295,"12x25":2895,"12x30":3395,"12x35":3995,"12x40":4395,"12x45":4995,"12x50":5595,
+  "18x20":2795,"18x25":3395,"18x30":3995,"18x35":4495,"18x40":4995,"18x45":5595,"18x50":6195,
+  "20x20":2995,"20x25":3595,"20x30":4195,"20x35":4795,"20x40":5595,"20x45":6295,"20x50":6995,
+  "22x20":3395,"22x25":3995,"22x30":4695,"22x35":5395,"22x40":6195,"22x45":6895,"22x50":7595,
+  "24x20":3595,"24x25":4595,"24x30":5195,"24x35":5895,"24x40":6595,"24x45":7595,"24x50":8395
+};
+
+const HEIGHT_ADD = {"20|6":0,"25|6":0,"30|6":0,"35|6":0,"40|6":0,"45|6":0,"50|6":0,"20|7":120,"25|7":145,"30|7":160,"35|7":190,"40|7":215,"45|7":250,"50|7":270,"20|8":230,"25|8":275,"30|8":210,"35|8":370,"40|8":420,"45|8":490,"50|8":540,"20|9":335,"25|9":410,"30|9":460,"35|9":590,"40|9":700,"45|9":730,"50|9":810,"20|10":648,"25|10":820,"30|10":953,"35|10":1115,"40|10":1290,"45|10":1485,"50|10":1660,"20|11":700,"25|11":885,"30|11":1030,"35|11":1205,"40|11":1390,"45|11":1605,"50|11":1790,"20|12":785,"25|12":953,"30|12":1105,"35|12":1295,"40|12":1493,"45|12":1725,"50|12":1925,"20|13":1780,"25|13":2315,"30|13":2500,"35|13":2900,"40|13":3380,"45|13":3860,"50|13":4340,"20|14":1870,"25|14":2450,"30|14":2530,"35|14":3020,"40|14":3500,"45|14":3980,"50|14":4450,"20|15":1930,"25|15":2490,"30|15":2650,"35|15":3140,"40|15":3620,"45|15":4100,"50|15":4580,"20|16":2170,"25|16":2530,"30|16":2890,"35|16":3370,"40|16":3860,"45|16":4340,"50|16":4620,"20|17":2720,"25|17":3080,"30|17":3440,"35|17":4170,"40|17":4610,"45|17":5055,"50|17":5485,"20|18":2830,"25|18":3210,"30|18":3600,"35|18":4360,"40|18":4825,"45|18":5290,"50|18":5760,"20|19":2950,"25|19":3350,"30|19":3760,"35|19":4560,"40|19":5050,"45|19":5550,"50|19":6050,"20|20":3070,"25|20":3485,"30|20":3910,"35|20":4760,"40|20":5285,"45|20":5815,"50|20":6340};
+
+const SIDEWALLS_2 = {"20|6":580,"25|6":700,"30|6":845,"35|6":990,"40|6":1140,"45|6":1280,"50|6":1420,"20|7":690,"25|7":835,"30|7":1060,"35|7":1170,"40|7":1355,"45|7":1495,"50|7":1660,"20|8":820,"25|8":985,"30|8":1230,"35|8":1350,"40|8":1620,"45|8":1710,"50|8":1880,"20|9":850,"25|9":1025,"30|9":1255,"35|9":1500,"40|9":1745,"45|9":1840,"50|9":2045,"20|10":935,"25|10":1170,"30|10":1420,"35|10":1735,"40|10":1960,"45|10":2075,"50|10":2310,"20|11":1085,"25|11":1325,"30|11":1610,"35|11":1870,"40|11":2180,"45|11":2305,"50|11":2600,"20|12":1135,"25|12":1410,"30|12":1735,"35|12":2060,"40|12":2405,"45|12":2550,"50|12":2850,"20|13":1240,"25|13":1560,"30|13":1900,"35|13":2255,"40|13":2620,"45|13":2795,"50|13":3240,"20|14":1350,"25|14":1710,"30|14":2080,"35|14":2455,"40|14":2850,"45|14":3055,"50|14":3605,"20|15":2165,"25|15":2705,"30|15":3250,"35|15":3750,"40|15":4325,"45|15":4900,"50|15":5480,"20|16":2440,"25|16":3030,"30|16":3655,"35|16":4265,"40|16":4895,"45|16":5470,"50|16":6080,"20|17":2700,"25|17":3365,"30|17":4040,"35|17":4670,"40|17":5345,"45|17":6010,"50|17":6690,"20|18":2950,"25|18":3690,"30|18":4415,"35|18":5165,"40|18":5885,"45|18":6605,"50|18":7320,"20|19":3230,"25|19":4025,"30|19":4825,"35|19":5620,"40|19":6425,"45|19":7225,"50|19":8050,"20|20":3480,"25|20":4325,"30|20":5810,"35|20":6055,"40|20":6920,"45|20":7780,"50|20":8650};
+
+const ENDWALL_1 = {"12|6":730,"18|6":850,"20|6":970,"22|6":1090,"24|6":1210,"12|7":820,"18|7":940,"20|7":1060,"22|7":1200,"24|7":1320,"12|8":910,"18|8":1030,"20|8":1150,"22|8":1270,"24|8":1390,"12|9":1000,"18|9":1120,"20|9":1240,"22|9":1360,"24|9":1480,"12|10":1090,"18|10":1220,"20|10":1330,"22|10":1450,"24|10":1570,"12|11":1180,"18|11":1300,"20|11":1420,"22|11":1540,"24|11":1660,"12|12":1270,"18|12":1390,"20|12":1510,"22|12":1700,"24|12":1750,"12|13":1360,"18|13":1480,"20|13":1600,"22|13":1890,"24|13":1910,"12|14":1450,"18|14":1600,"20|14":1770,"22|14":1930,"24|14":2100,"12|15":1685,"18|15":2120,"20|15":2550,"22|15":2980,"24|15":3370,"12|16":1830,"18|16":2290,"20|16":2880,"22|16":3220,"24|16":3665,"12|17":1980,"18|17":2480,"20|17":2990,"22|17":3480,"24|17":3960,"12|18":2120,"18|18":2650,"20|18":3210,"22|18":3730,"24|18":4240,"12|19":2310,"18|19":2840,"20|19":3420,"22|19":3970,"24|19":4530,"12|20":2460,"18|20":3060,"20|20":3630,"22|20":4230,"24|20":4810};
+
+const ACCESSORIES = {
+  extra_panel: {21:130, 26:160, 31:200, 36:230, 41:260},
+  clear_panel: {12:150, 16:200},
+  garage_door: {"8x7":895, "9x8":895, "10x8":1095, "10x10":1295},
+  walkin_door: 350,
+  window: 230,              // ✅ FIX: Windows now $230
+  window_frame: 150,
+  door_frame: 160,
+  garage_frame: 300,
+  brace: {2:10, 3:15, 4:20},
+  mobile_anchor: {installed:35, not_installed:30},
+  concrete_bolt: 10,
+  ground_cert: {21:595, 26:695, 31:695, 36:795, 41:895, 46:995, 51:1195}
+};
+
+/* ===== SNOW LOAD ADDER ===== */
+const SNOW_LOAD_ADD = {
+  standard: 0,
+  "60": 3240            // ✅ ADD: Snow Load 60 LB = $3,240
+};
+
+/* ===== PDF SETTINGS ===== */
+const PDF_TITLE    = "HM A-FRAME ROOF - Estimate";
+const DISCOUNT_PCT = 10;
+const DEPOSIT_PCT  = 10;
+
+function money(n){
+  const neg = n < 0;
+  const x = Math.abs(n);
+  const s = String(Math.round(x));
+  const parts = s.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return (neg ? "-" : "") + "$ " + parts;
+}
+
+function getInputs(){
+  return {
+    gauge: String(document.getElementById("gauge").value),
+    w: String(document.getElementById("width_ft").value),
+    L: String(document.getElementById("length_ft").value),
+    h: String(document.getElementById("height_ft").value),
+
+    snow_load: String(document.getElementById("snow_load").value),
+
+    sidewall_qty: Number(document.getElementById("sidewall_qty").value),
+    endwall_qty: Number(document.getElementById("endwall_qty").value),
+
+    extra_panel_qty: Number(document.getElementById("extra_panel_qty").value),
+    extra_panel_len: Number(document.getElementById("extra_panel_length").value),
+    clear_panel_qty: Number(document.getElementById("clear_panel_qty").value),
+    clear_panel_len: Number(document.getElementById("clear_panel_length").value),
+    garage_door_qty: Number(document.getElementById("garage_door_qty").value),
+    garage_door_size: document.getElementById("garage_door_size").value,
+    walkin_door_qty: Number(document.getElementById("walkin_door_qty").value),
+    window_qty: Number(document.getElementById("window_qty").value),
+    window_frame_qty: Number(document.getElementById("window_frame_qty").value),
+    door_frame_qty: Number(document.getElementById("door_frame_qty").value),
+    garage_frame_qty: Number(document.getElementById("garage_frame_qty").value),
+    brace_qty: Number(document.getElementById("brace_qty").value),
+    brace_size: Number(document.getElementById("brace_size").value),
+    gable_qty: Number(document.getElementById("gable_qty").value),
+    bow_qty: Number(document.getElementById("bow_qty").value),
+
+    ground_cert_qty: Number(document.getElementById("ground_cert_qty").value),
+    ground_cert_len: Number(document.getElementById("ground_cert_length").value),
+    ground_cert_doubleleg: document.getElementById("ground_cert_doubleleg").checked,
+
+    mobile_anchor_qty: Number(document.getElementById("mobile_anchor_qty").value),
+    mobile_anchor_install: document.getElementById("mobile_anchor_install").value,
+    concrete_bolt_qty: Number(document.getElementById("concrete_bolt_qty").value)
+  };
+}
+
+function getBasePrice(size, gauge){
+  const base14 = BASE_14G[size];
+  if(!base14) return null;
+  if(gauge === "12") return Math.round(base14 * 1.15); // 12G add 15%
+  return base14; // 14G
+}
+
+function calcQuote(){
+  const inp = getInputs();
+  const size = `${inp.w}x${inp.L}`;
+
+  const base = getBasePrice(size, inp.gauge);
+  if(base === null) return {ok:false, error:`Base price not found for ${size}`};
+
+  const snowAdder = (SNOW_LOAD_ADD[inp.snow_load] ?? 0);
+
+  const heightAdder = HEIGHT_ADD[`${inp.L}|${inp.h}`];
+  if(heightAdder === undefined) return {ok:false, error:`Height adder not found`};
+
+  const sidewalls2 = SIDEWALLS_2[`${inp.L}|${inp.h}`];
+  if(sidewalls2 === undefined) return {ok:false, error:`Sidewall price not found`};
+  const sidewallsTotal = inp.sidewall_qty === 2 ? sidewalls2 : 0;
+
+  const endwall1 = ENDWALL_1[`${inp.w}|${inp.h}`];
+  if(endwall1 === undefined) return {ok:false, error:`Endwall price not found`};
+  const endwallsTotal = inp.endwall_qty * endwall1;
+
+  const acc = {};
+  acc.extra_panels = inp.extra_panel_qty * (ACCESSORIES.extra_panel[inp.extra_panel_len] || 0);
+  acc.clear_panels = inp.clear_panel_qty * (ACCESSORIES.clear_panel[inp.clear_panel_len] || 0);
+  acc.garage_doors = inp.garage_door_qty * (ACCESSORIES.garage_door[inp.garage_door_size] || 0);
+  acc.walkin_doors = inp.walkin_door_qty * ACCESSORIES.walkin_door;
+  acc.windows = inp.window_qty * ACCESSORIES.window;
+  acc.window_frames = inp.window_frame_qty * ACCESSORIES.window_frame;
+  acc.door_frames = inp.door_frame_qty * ACCESSORIES.door_frame;
+  acc.garage_frames = inp.garage_frame_qty * ACCESSORIES.garage_frame;
+  acc.braces = inp.brace_qty * (ACCESSORIES.brace[inp.brace_size] || 0);
+
+  // Ground Cert
+  const gcBase = (ACCESSORIES.ground_cert[inp.ground_cert_len] || 0);
+  const gcMult = inp.ground_cert_doubleleg ? 2 : 1;
+  acc.ground_certification = inp.ground_cert_qty * gcBase * gcMult;
+
+  acc.mobile_anchors = inp.mobile_anchor_qty * (ACCESSORIES.mobile_anchor[inp.mobile_anchor_install] || 0);
+  acc.concrete_bolts = inp.concrete_bolt_qty * ACCESSORIES.concrete_bolt;
+
+  const accessoriesTotal = Object.values(acc).reduce((sum, v) => sum + v, 0);
+
+  // ✅ Total includes Snow Load Adder
+  const total = base + snowAdder + heightAdder + sidewallsTotal + endwallsTotal + accessoriesTotal;
+
+  return {
+    ok:true, ...inp, size,
+    base, snowAdder,
+    heightAdder,
+    sidewalls2, sidewallsTotal,
+    endwall1, endwallsTotal,
+    accessories: acc,
+    accessoriesTotal,
+    total
+  };
+}
+
+function render(r){
+  const out = document.getElementById("output");
+  if(!r.ok){
+    out.innerHTML = `<div class="sk-row"><span>Error</span><strong style="color:#b91c1c">${r.error}</strong></div>`;
+    return;
+  }
+
+  let html = `
+    <div class="sk-row"><span>Building</span><strong>${r.size} × ${r.h}ft • ${r.gauge}G</strong></div>
+    <div class="sk-row"><span>Base (Roof+Frame)</span><strong>${money(r.base)}</strong></div>
+  `;
+
+  if((r.snowAdder || 0) > 0){
+    html += `<div class="sk-row"><span>Snow Load 60 LB</span><strong>${money(r.snowAdder)}</strong></div>`;
+  }
+
+  html += `<div class="sk-row"><span>Height Adder</span><strong>${money(r.heightAdder)}</strong></div>`;
+
+  if(r.sidewall_qty === 2){
+    html += `<div class="sk-row"><span>Sidewalls (Both)</span><strong>${money(r.sidewallsTotal)}</strong></div>`;
+  }
+  if(r.endwall_qty > 0){
+    html += `<div class="sk-row"><span>Endwalls (${r.endwall_qty})</span><strong>${money(r.endwallsTotal)}</strong></div>`;
+  }
+
+  const acc = r.accessories;
+  let hasAcc = false;
+  let accHtml = "";
+
+  const addRow = (label, amount) => {
+    if(amount > 0){
+      hasAcc = true;
+      accHtml += `<div class="sk-row"><span>${label}</span><strong>${money(amount)}</strong></div>`;
+    }
+  };
+
+  addRow(`Extra Panels (${r.extra_panel_qty})`, acc.extra_panels);
+  addRow(`Clear Panels (${r.clear_panel_qty})`, acc.clear_panels);
+  addRow(`Garage Doors (${r.garage_door_qty})`, acc.garage_doors);
+  addRow(`Walk-In Doors (${r.walkin_door_qty})`, acc.walkin_doors);
+  addRow(`Windows (${r.window_qty})`, acc.windows);
+  addRow(`Window Frames (${r.window_frame_qty})`, acc.window_frames);
+  addRow(`Door Frames (${r.door_frame_qty})`, acc.door_frames);
+  addRow(`Garage Frames (${r.garage_frame_qty})`, acc.garage_frames);
+  addRow(`Braces (${r.brace_qty})`, acc.braces);
+
+  if(acc.ground_certification > 0){
+    const x2 = r.ground_cert_doubleleg ? " (x2)" : "";
+    addRow(`Ground Certification (${r.ground_cert_len}'${x2})`, acc.ground_certification);
+  }
+
+  addRow(`Mobile Anchors (${r.mobile_anchor_qty})`, acc.mobile_anchors);
+  addRow(`Concrete Bolts (${r.concrete_bolt_qty})`, acc.concrete_bolts);
+
+  if(hasAcc){
+    html += `<div class="sk-subtotal"><div class="sk-row"><span>Accessories Subtotal</span><strong>${money(r.accessoriesTotal)}</strong></div></div>`;
+    html += accHtml;
+  }
+
+  html += `<div class="sk-row" style="border-top:2px solid #111827;padding-top:10px">
+            <span style="font-size:16px">GRAND TOTAL</span>
+            <strong style="color:#2563eb;font-size:18px">${money(r.total)}</strong>
+          </div>`;
+
+  out.innerHTML = html;
+}
+
+function syncGroundCertLength(){
+  const L = Number(document.getElementById("length_ft").value);
+  const target = String(L + 1); // 20->21, 25->26, etc.
+  const sel = document.getElementById("ground_cert_length");
+  const exists = Array.from(sel.options).some(o => o.value === target);
+  if(exists) sel.value = target;
+}
+
+function resetForm(){
+  document.getElementById("gauge").value = "14";
+  document.getElementById("width_ft").value = "20";
+  document.getElementById("length_ft").value = "35";
+  document.getElementById("height_ft").value = "11";
+  document.getElementById("snow_load").value = "standard";
+  document.getElementById("sidewall_qty").value = "0";
+  document.getElementById("endwall_qty").value = "0";
+
+  document.getElementById("extra_panel_qty").value = "0";
+  document.getElementById("clear_panel_qty").value = "0";
+  document.getElementById("garage_door_qty").value = "0";
+  document.getElementById("walkin_door_qty").value = "0";
+  document.getElementById("window_qty").value = "0";
+  document.getElementById("window_frame_qty").value = "0";
+  document.getElementById("door_frame_qty").value = "0";
+  document.getElementById("garage_frame_qty").value = "0";
+  document.getElementById("brace_qty").value = "0";
+  document.getElementById("gable_qty").value = "0";
+  document.getElementById("bow_qty").value = "0";
+
+  document.getElementById("ground_cert_qty").value = "0";
+  document.getElementById("ground_cert_doubleleg").checked = false;
+
+  document.getElementById("mobile_anchor_qty").value = "0";
+  document.getElementById("concrete_bolt_qty").value = "0";
+
+  syncGroundCertLength();
+  lastResult = calcQuote();
+  render(lastResult);
+}
+
+/* ===== PDF (MATCHES YOUR SAMPLE STYLE) ===== */
+function downloadPDF(r){
+  if(!r?.ok) return alert("Please calculate a quote first");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const LEFT = 20, RIGHT = 190;
+  let y = 18;
+
+  const setBlack = () => doc.setTextColor(0,0,0);
+  const setGreen = () => doc.setTextColor(22,163,74);
+
+  const hr = (yy) => {
+    doc.setDrawColor(120);
+    doc.setLineWidth(0.4);
+    doc.line(LEFT, yy, RIGHT, yy);
+  };
+
+  const money2 = (n) => {
+    const neg = n < 0;
+    const x = Math.abs(Math.round(n));
+    const parts = String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return (neg ? "-" : "") + "$ " + parts;
+  };
+
+  const lineItem = (label, value, opts = {}) => {
+    const indent = opts.indent || 0;
+    const size = opts.size || 11;
+
+    doc.setFontSize(size);
+    doc.setFont("helvetica", opts.bold ? "bold" : "normal");
+    if(opts.green) setGreen(); else setBlack();
+
+    doc.text(label, LEFT + indent, y);
+    doc.text(value, RIGHT, y, { align: "right" });
+    y += 6;
+
+    if(y > 280){ doc.addPage(); y = 20; }
+  };
+
+  const sectionLabel = (txt) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    setBlack();
+    doc.text(txt, LEFT, y);
+    y += 7;
+  };
+
+  const subtotal = Math.round(r.total);
+  const discount = Math.round(subtotal * (DISCOUNT_PCT / 100));
+  const totalAfterSale = subtotal - discount;
+  const deposit = Math.round(totalAfterSale * (DEPOSIT_PCT / 100));
+  const dueAtInstall = totalAfterSale - deposit;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  setBlack();
+  doc.text(PDF_TITLE, (LEFT + RIGHT)/2, y, { align: "center" });
+  y += 12;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  setBlack();
+
+  const sidewallsText = (r.sidewall_qty === 2) ? "Both" : "None";
+  const endwallsText = (r.endwall_qty > 0) ? String(r.endwall_qty) : "None";
+  const snowText = (r.snow_load === "60") ? "60 LB" : "Standard";
+
+  doc.text(`Building: ${r.size} × ${r.h}ft`, LEFT, y); y += 5;
+  doc.text(`Gauge: ${r.gauge}G`, LEFT, y); y += 5;
+  doc.text(`Snow Load: ${snowText}`, LEFT, y); y += 5;
+  doc.text(`Sidewalls: ${sidewallsText}`, LEFT, y); y += 5;
+  doc.text(`Endwalls: ${endwallsText}`, LEFT, y); y += 10;
+
+  hr(y); y += 12;
+
+  lineItem("Base (Roof+Frame):", money2(r.base));
+
+  if((r.snowAdder || 0) > 0){
+    lineItem("Snow Load 60 LB:", money2(r.snowAdder));
+  }
+
+  lineItem("Height Adder:", money2(r.heightAdder));
+
+  if(r.sidewallsTotal > 0) lineItem("Sidewalls:", money2(r.sidewallsTotal));
+  if(r.endwallsTotal > 0) lineItem(`Endwalls (${r.endwall_qty}):`, money2(r.endwallsTotal));
+
+  y += 4;
+
+  const acc = r.accessories || {};
+  if(r.accessoriesTotal > 0){
+    sectionLabel("ACCESSORIES");
+
+    const addAcc = (label, qty, amount) => {
+      if(amount > 0){
+        lineItem(`  ${label} (${qty})`, money2(amount), { indent: 6 });
+      }
+    };
+
+    addAcc("Extra Panels", r.extra_panel_qty, acc.extra_panels || 0);
+    addAcc("Clear Panels", r.clear_panel_qty, acc.clear_panels || 0);
+    addAcc("Garage Doors", r.garage_door_qty, acc.garage_doors || 0);
+    addAcc("Walk-In Doors", r.walkin_door_qty, acc.walkin_doors || 0);
+    addAcc("Windows", r.window_qty, acc.windows || 0);
+    addAcc("Window Frame Outs", r.window_frame_qty, acc.window_frames || 0);
+    addAcc("Door Frame Outs", r.door_frame_qty, acc.door_frames || 0);
+    addAcc("Garage Frame Outs", r.garage_frame_qty, acc.garage_frames || 0);
+    addAcc("Braces", r.brace_qty, acc.braces || 0);
+
+    if((acc.ground_certification || 0) > 0){
+      const x2 = r.ground_cert_doubleleg ? " x2" : "";
+      lineItem(`  Ground Certification (${r.ground_cert_len}'${x2})`, money2(acc.ground_certification), { indent: 6 });
+    }
+
+    addAcc("Mobile Anchors", r.mobile_anchor_qty, acc.mobile_anchors || 0);
+    addAcc("Concrete Bolts", r.concrete_bolt_qty, acc.concrete_bolts || 0);
+
+    y += 2;
+    lineItem("Accessories Subtotal:", money2(r.accessoriesTotal));
+  }
+
+  y += 6;
+  hr(y); y += 10;
+
+  lineItem("SUBTOTAL:", money2(subtotal), { bold:true });
+  lineItem(`HOLIDAY SALE (${DISCOUNT_PCT}% OFF):`, money2(-discount), { green:true });
+
+  y += 2;
+  hr(y); y += 10;
+
+  lineItem("TOTAL AFTER SALE:", money2(totalAfterSale), { bold:true });
+  lineItem(`DEPOSIT (${DEPOSIT_PCT}%):`, money2(-deposit), { green:true });
+
+  y += 2;
+  hr(y); y += 12;
+
+  lineItem("DUE AT INSTALLATION:", money2(dueAtInstall), { bold:true, green:true, size:12 });
+
+  doc.save(`HM-AFRAME-Estimate-${r.size}.pdf`);
+}
+
+let lastResult = null;
+
+document.getElementById("btnCalc").addEventListener("click", ()=>{
+  lastResult = calcQuote();
+  render(lastResult);
+});
+
+document.getElementById("btnReset").addEventListener("click", resetForm);
+document.getElementById("btnPDF").addEventListener("click", ()=>downloadPDF(lastResult));
+
+document.getElementById("length_ft").addEventListener("change", ()=>{
+  syncGroundCertLength();
+  lastResult = calcQuote();
+  render(lastResult);
+});
+
+document.getElementById("gauge").addEventListener("change", ()=>{
+  lastResult = calcQuote();
+  render(lastResult);
+});
+
+document.getElementById("snow_load").addEventListener("change", ()=>{
+  lastResult = calcQuote();
+  render(lastResult);
+});
+
+// auto-calc on load
+syncGroundCertLength();
+lastResult = calcQuote();
+render(lastResult);
+</script>
