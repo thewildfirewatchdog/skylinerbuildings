@@ -1,0 +1,232 @@
+{
+  "name": "Pacific NW Daily Wildfire Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger (7 AM PT)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "notes": "Fires once daily at 7:00 AM America/Los_Angeles."
+    },
+    {
+      "parameters": {
+        "url": "https://inciweb.nwcg.gov/feeds/rss/incidents/",
+        "options": {}
+      },
+      "id": "fetch-inciweb",
+      "name": "Fetch InciWeb RSS",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [460, 180]
+    },
+    {
+      "parameters": {
+        "url": "https://gacc.nifc.gov/nwcc/content/pdfs/nwcc_sit_report.pdf",
+        "options": {}
+      },
+      "id": "fetch-nwcc",
+      "name": "Fetch NWCC Situation Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://www.oregon.gov/osp/programs/sfm/Pages/Wildfire-Updates.aspx",
+        "options": {}
+      },
+      "id": "fetch-oregon-sfm",
+      "name": "Fetch Oregon SFM Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 420]
+    },
+    {
+      "parameters": {
+        "url": "https://www.dnr.wa.gov/programs-and-services/wildfire/active-fires-map-and-reports",
+        "options": {}
+      },
+      "id": "fetch-wa-dnr",
+      "name": "Fetch WA DNR Fires Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 540]
+    },
+    {
+      "parameters": {
+        "url": "https://api.weather.gov/alerts/active?area=OR,WA&event=Fire%20Weather%20Watch,Red%20Flag%20Warning",
+        "options": {}
+      },
+      "id": "fetch-nws-alerts",
+      "name": "Fetch NWS Fire Weather Alerts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 660],
+      "notes": "NOAA NWS public API — no key required."
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "merge-sources",
+      "name": "Merge All Sources",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [700, 420]
+    },
+    {
+      "parameters": {
+        "jsCode": "const today = new Date();\nconst cutoff = new Date(today.getTime() - 48 * 60 * 60 * 1000);\nconst dateStr = today.toLocaleDateString('en-US', {\n  timeZone: 'America/Los_Angeles',\n  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'\n});\n\nconst inciwebItems = [];\nfor (const item of $input.all()) {\n  const d = item.json;\n  if (d.pubDate) {\n    const pub = new Date(d.pubDate);\n    if (pub >= cutoff) {\n      const title = (d.title || '').toLowerCase();\n      const content = (d.content || d.summary || d['content:encoded'] || '');\n      const isPNW = title.includes('oregon') || title.includes('washington') ||\n                    title.includes('idaho') || title.includes(' or ') ||\n                    title.includes(' wa ') || content.toLowerCase().includes('pacific northwest');\n      if (isPNW) {\n        inciwebItems.push({\n          title: d.title || 'Unnamed Incident',\n          link: d.link || '',\n          pubDate: d.pubDate,\n          summary: (content || '').substring(0, 500)\n        });\n      }\n    }\n  }\n}\n\nconst seen = new Set();\nconst uniqueInciweb = inciwebItems.filter(i => {\n  if (seen.has(i.title)) return false;\n  seen.add(i.title);\n  return true;\n});\n\nreturn [{\n  json: {\n    date: dateStr,\n    inciwebItems: uniqueInciweb,\n    inciwebCount: uniqueInciweb.length,\n    sources: [\n      'InciWeb (inciweb.nwcg.gov)',\n      'NW Coordination Center (gacc.nifc.gov/nwcc)',\n      'Oregon State Fire Marshal (oregon.gov/osp/sfm)',\n      'Washington DNR (dnr.wa.gov)',\n      'NOAA / National Weather Service (weather.gov)'\n    ]\n  }\n}];"
+      },
+      "id": "filter-structure",
+      "name": "Filter & Structure Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 420]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "gpt-4o-mini",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a factual wildfire information summarizer. Summarize ONLY information provided from official sources. NEVER invent fire names, acreage, containment percentages, evacuation orders, causes, or emergency instructions. Format response as HTML for WordPress. Use <h2> headers, <ul>/<li> lists. No markdown."
+            },
+            {
+              "role": "user",
+              "content": "=== TODAY'S DATE ===\n{{ $json.date }}\n\n=== INCIWEB INCIDENTS (Pacific Northwest, last 48h) ===\n{{ JSON.stringify($json.inciwebItems, null, 2) }}\n\n=== INSTRUCTIONS ===\nCreate a WordPress blog post with these sections:\n1. Public Safety Disclaimer (verbatim): \"This is a public information summary from official sources. For evacuation orders or emergency instructions, follow your county sheriff, emergency management office, or official fire agency.\"\n2. Quick Summary (2-3 sentences, ONLY from data above)\n3. Oregon Fire Updates (only from data; if none: 'No new Oregon incidents reported in official feeds in the past 48 hours.')\n4. Washington Fire Updates (same rule)\n5. Pacific Northwest Fire Weather\n6. Preparedness Tip of the Day (from NFPA/Ready.gov guidance only)\n7. Sources\n\nReturn ONLY HTML body content. No <html>/<head>/<body> tags."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ai-summarize",
+      "name": "AI Summarize (OpenAI)",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1.3,
+      "position": [1140, 420],
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI"
+        }
+      },
+      "notes": "Uses gpt-4o-mini (~$0.002/run). Upgrade to gpt-4o for higher quality."
+    },
+    {
+      "parameters": {
+        "jsCode": "const date = $('Filter & Structure Data').first().json.date;\nconst aiContent = $input.first().json.message.content;\n\nconst sourceLinks = [\n  '<a href=\"https://inciweb.nwcg.gov\" target=\"_blank\" rel=\"noopener\">InciWeb — National Interagency Fire Center</a>',\n  '<a href=\"https://gacc.nifc.gov/nwcc/\" target=\"_blank\" rel=\"noopener\">Northwest Coordination Center (NWCC)</a>',\n  '<a href=\"https://www.oregon.gov/osp/programs/sfm\" target=\"_blank\" rel=\"noopener\">Oregon State Fire Marshal</a>',\n  '<a href=\"https://www.dnr.wa.gov/programs-and-services/wildfire\" target=\"_blank\" rel=\"noopener\">Washington DNR Wildfire</a>',\n  '<a href=\"https://www.weather.gov/fire\" target=\"_blank\" rel=\"noopener\">NOAA / National Weather Service — Fire Weather</a>'\n];\n\nconst footer = `\n<hr>\n<p><strong>Sources:</strong></p>\n<ul>${sourceLinks.map(l => `<li>${l}</li>`).join('')}</ul>\n<p><em>This post was generated automatically from public RSS feeds and official agency websites. It is not a substitute for official emergency communications. Always follow directions from your local emergency management office.</em></p>\n`;\n\nconst today = new Date();\nconst titleDate = today.toLocaleDateString('en-US', {\n  timeZone: 'America/Los_Angeles',\n  month: 'long', day: 'numeric', year: 'numeric'\n});\nconst title = `Pacific Northwest Fire Report: Oregon and Washington Wildfire Updates for ${titleDate}`;\n\nreturn [{ json: { title, content: aiContent + footer, date } }];"
+      },
+      "id": "build-post",
+      "name": "Build WordPress Post",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1360, 420]
+    },
+    {
+      "parameters": {
+        "resource": "post",
+        "operation": "create",
+        "title": "={{ $json.title }}",
+        "content": "={{ $json.content }}",
+        "status": "draft",
+        "additionalFields": {
+          "tags": ["wildfire", "Oregon", "Washington", "Pacific Northwest", "fire weather", "public safety"],
+          "excerpt": "Daily wildfire update for the Pacific Northwest — Oregon and Washington fire activity from official sources."
+        }
+      },
+      "id": "wp-create-draft",
+      "name": "WordPress Create Draft",
+      "type": "n8n-nodes-base.wordpress",
+      "typeVersion": 1,
+      "position": [1580, 420],
+      "credentials": {
+        "wordpressApi": {
+          "name": "WordPress"
+        }
+      },
+      "notes": "Status is 'draft' — human must review before publishing."
+    },
+    {
+      "parameters": {
+        "fromEmail": "sensorinstaller@gmail.com",
+        "toEmail": "sensorinstaller@gmail.com",
+        "subject": "Wildfire Draft Ready: {{ $('Build WordPress Post').first().json.title }}",
+        "emailType": "text",
+        "text": "Your daily wildfire blog draft has been created.\n\nTitle: {{ $('Build WordPress Post').first().json.title }}\n\nWordPress Draft ID: {{ $json.id }}\n\nLog in to review and publish:\nhttps://yoursite.com/wp-admin/post.php?post={{ $json.id }}&action=edit\n\n---\nSources: InciWeb, NWCC, Oregon SFM, WA DNR, NOAA NWS"
+      },
+      "id": "email-notify",
+      "name": "Email Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1800, 420],
+      "credentials": {
+        "smtp": {
+          "name": "Gmail SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "sensorinstaller@gmail.com",
+        "toEmail": "sensorinstaller@gmail.com",
+        "subject": "Wildfire Workflow ERROR — {{ $now.format('yyyy-MM-dd') }}",
+        "emailType": "text",
+        "text": "The daily wildfire workflow encountered an error.\n\nError: {{ $json.error.message }}\nNode: {{ $json.error.node.name }}\n\nCheck your n8n dashboard:\nhttps://n8n.wildfirewatchdog.com"
+      },
+      "id": "email-error",
+      "name": "Email on Error",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1800, 600],
+      "credentials": {
+        "smtp": {
+          "name": "Gmail SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (7 AM PT)": {
+      "main": [[
+        {"node": "Fetch InciWeb RSS", "type": "main", "index": 0},
+        {"node": "Fetch NWCC Situation Report", "type": "main", "index": 0},
+        {"node": "Fetch Oregon SFM Page", "type": "main", "index": 0},
+        {"node": "Fetch WA DNR Fires Page", "type": "main", "index": 0},
+        {"node": "Fetch NWS Fire Weather Alerts", "type": "main", "index": 0}
+      ]]
+    },
+    "Fetch InciWeb RSS": {"main": [[{"node": "Merge All Sources", "type": "main", "index": 0}]]},
+    "Fetch NWCC Situation Report": {"main": [[{"node": "Merge All Sources", "type": "main", "index": 1}]]},
+    "Fetch Oregon SFM Page": {"main": [[{"node": "Merge All Sources", "type": "main", "index": 2}]]},
+    "Fetch WA DNR Fires Page": {"main": [[{"node": "Merge All Sources", "type": "main", "index": 3}]]},
+    "Fetch NWS Fire Weather Alerts": {"main": [[{"node": "Merge All Sources", "type": "main", "index": 4}]]},
+    "Merge All Sources": {"main": [[{"node": "Filter & Structure Data", "type": "main", "index": 0}]]},
+    "Filter & Structure Data": {"main": [[{"node": "AI Summarize (OpenAI)", "type": "main", "index": 0}]]},
+    "AI Summarize (OpenAI)": {"main": [[{"node": "Build WordPress Post", "type": "main", "index": 0}]]},
+    "Build WordPress Post": {"main": [[{"node": "WordPress Create Draft", "type": "main", "index": 0}]]},
+    "WordPress Create Draft": {"main": [[{"node": "Email Notification", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Los_Angeles",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": {"instanceId": ""},
+  "tags": ["wildfire", "automation", "blog"]
+}
