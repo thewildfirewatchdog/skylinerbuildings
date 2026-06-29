@@ -1,0 +1,24 @@
+# ============================================================
+# Caddyfile — reverse proxy for n8n
+# Replace the hostname with whichever subdomain you choose:
+#   n8n.wildfirewatchdog.com
+#   n8n.skylinerbuildings.com
+# Caddy auto-provisions a Let's Encrypt TLS certificate.
+# ============================================================
+
+n8n.wildfirewatchdog.com {
+    reverse_proxy n8n:5678
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Increase timeouts for long-running webhook calls
+    request_body {
+        max_size 50MB
+    }
+}
