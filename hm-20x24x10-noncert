@@ -1,0 +1,220 @@
+<!-- HM A-FRAME ROOF - LOCKED QUOTE SHEET
+     20'W x 24'L x 10'H | 2 Sidewalls | 1 Endwall
+     Non-Certified | Concrete Foundation | No Permits
+     Ready for Divi Code Module -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  .sk-app{max-width:1100px;margin:0 auto;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .sk-card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.10);overflow:hidden;margin-bottom:20px}
+  .sk-head{padding:18px 20px;background:linear-gradient(135deg,#111827,#2563eb);color:#fff}
+  .sk-head h2{margin:0;font-size:20px}
+  .sk-sub{opacity:.9;margin-top:4px;font-size:13px}
+  .sk-body{padding:18px 20px}
+  .sk-section{margin-top:20px;padding-top:20px;border-top:2px solid #e5e7eb}
+  .sk-section-title{font-size:14px;font-weight:900;color:#111827;margin-bottom:12px;text-transform:uppercase}
+  .sk-specs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .sk-spec{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px}
+  .sk-spec span{display:block;font-size:11px;color:#6b7280;font-weight:800;text-transform:uppercase}
+  .sk-spec strong{display:block;font-size:15px;color:#111827;margin-top:3px}
+  .sk-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .sk-btn{border:0;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer;font-size:14px}
+  .sk-btn.dark{background:#111827;color:#fff}
+  .sk-out{margin-top:16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px}
+  .sk-row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed #e5e7eb}
+  .sk-row:last-child{border-bottom:0}
+  .sk-row strong{font-weight:900}
+  .sk-green strong{color:#16a34a}
+  .sk-note{margin-top:10px;font-size:12px;color:#6b7280;line-height:1.45}
+  .sk-flag{margin-top:12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:10px 12px;font-size:12px;color:#92400e;line-height:1.45}
+  .sk-badge{display:inline-block;background:#ecfeff;color:#155e75;border:1px solid #a5f3fc;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:900}
+  @media (max-width:980px){.sk-specs{grid-template-columns:repeat(2,1fr)}}
+</style>
+
+<div class="sk-app">
+  <div class="sk-card">
+    <div class="sk-head">
+      <h2>HM A-FRAME ROOF - 20 x 24 x 10 <span class="sk-badge">Non-Certified</span></h2>
+      <div class="sk-sub">2 Sidewalls + 1 Endwall | Concrete Foundation | No Permits</div>
+    </div>
+
+    <div class="sk-body">
+      <div class="sk-section-title">Building Configuration</div>
+      <div class="sk-specs">
+        <div class="sk-spec"><span>Size (W x L)</span><strong>20' x 24'</strong></div>
+        <div class="sk-spec"><span>Leg Height</span><strong>10 ft</strong></div>
+        <div class="sk-spec"><span>Gauge</span><strong>14G</strong></div>
+        <div class="sk-spec"><span>Roof Style</span><strong>Vertical A-Frame</strong></div>
+        <div class="sk-spec"><span>Snow Load</span><strong>Standard</strong></div>
+        <div class="sk-spec"><span>Sidewalls</span><strong>Both (2)</strong></div>
+        <div class="sk-spec"><span>Endwalls</span><strong>One (1)</strong></div>
+        <div class="sk-spec"><span>Certification</span><strong>Non-Certified</strong></div>
+      </div>
+
+      <div class="sk-section">
+        <div class="sk-section-title">Itemized Estimate</div>
+        <div class="sk-out" id="output"></div>
+      </div>
+
+      <div class="sk-flag">
+        <strong>Length note:</strong> the price tables run in 5 ft steps (20 / 25 / 30 ...) because frames are
+        built at 21' / 26' / 31'. There is no 24 ft row, so this 24 ft building is quoted on the
+        <strong>25 ft (26' frame)</strong> tier - the next break up. Nothing here is interpolated or estimated.
+      </div>
+
+      <div class="sk-note">
+        <strong>Scope / exclusions:</strong>
+        No permits - permitting, plan review and any engineered drawings are the customer's responsibility and are not in this price.<br>
+        Non-certified - no ground certification package, no wind/snow certification letter, no engineer stamp.<br>
+        Concrete foundation - price assumes a level, cured concrete slab supplied by the customer, anchored with concrete wedge anchors.
+        Slab work, grading and site prep are not included. Extra concrete anchor bolts are $10 each if the job calls for more than the standard set.<br>
+        <strong>If the size was meant as 24' wide x 20' long</strong>, the total is $ 6,748 instead - confirm orientation before the order is written.
+      </div>
+
+      <div class="sk-actions">
+        <button class="sk-btn dark" id="btnPDF">Download PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== PRICING =====
+   Every figure below is a direct lookup from the master tables in
+   hm-12-24-pre-cert. The source key for each one is noted so it can be
+   re-checked when the master price list changes.
+*/
+const QUOTE = {
+  width: 20,
+  length: 24,
+  priced_length: 25,      // no 24' row - quoted at next break up
+  height: 10,
+  gauge: "14",
+
+  base:      3595,        // BASE_14G["20x25"]
+  height_add: 820,        // HEIGHT_ADD["25|10"]  (keyed by length)
+  sidewalls: 1170,        // SIDEWALLS_2["25|10"] (both sides)
+  endwall:   1330,        // ENDWALL_1["20|10"]   (keyed by width) x 1
+  snow_add:     0,        // standard snow load
+  ground_cert:  0         // non-certified
+};
+
+/* Alternate reading of "20x24" - 24' wide x 20' long:
+   BASE_14G["24x20"]=3595 + HEIGHT_ADD["20|10"]=648
+   + SIDEWALLS_2["20|10"]=935 + ENDWALL_1["24|10"]=1570 = 6748 */
+
+const PDF_TITLE    = "HM A-FRAME ROOF - Estimate";
+const DISCOUNT_PCT = 10;
+const DEPOSIT_PCT  = 10;
+
+function money(n){
+  const neg = n < 0;
+  const x = Math.abs(Math.round(n));
+  const parts = String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return (neg ? "-" : "") + "$ " + parts;
+}
+
+function totals(){
+  const subtotal = QUOTE.base + QUOTE.snow_add + QUOTE.height_add
+                 + QUOTE.sidewalls + QUOTE.endwall + QUOTE.ground_cert;
+  const discount = Math.round(subtotal * (DISCOUNT_PCT / 100));
+  const totalAfterSale = subtotal - discount;
+  const deposit = Math.round(totalAfterSale * (DEPOSIT_PCT / 100));
+  const dueAtInstall = totalAfterSale - deposit;
+  return { subtotal, discount, totalAfterSale, deposit, dueAtInstall };
+}
+
+function render(){
+  const t = totals();
+  document.getElementById("output").innerHTML = `
+    <div class="sk-row"><span>Base (Roof + Frame) - 20x25 tier, 14G</span><strong>${money(QUOTE.base)}</strong></div>
+    <div class="sk-row"><span>Height Adder - 10 ft legs</span><strong>${money(QUOTE.height_add)}</strong></div>
+    <div class="sk-row"><span>Sidewalls (Both)</span><strong>${money(QUOTE.sidewalls)}</strong></div>
+    <div class="sk-row"><span>Endwall (1)</span><strong>${money(QUOTE.endwall)}</strong></div>
+    <div class="sk-row"><span>Ground Certification</span><strong>Not included</strong></div>
+    <div class="sk-row"><span>Permits</span><strong>Not included</strong></div>
+    <div class="sk-row" style="border-top:2px solid #111827;padding-top:10px">
+      <span style="font-size:15px">SUBTOTAL</span><strong style="font-size:16px">${money(t.subtotal)}</strong></div>
+    <div class="sk-row sk-green"><span>SALE (${DISCOUNT_PCT}% OFF)</span><strong>${money(-t.discount)}</strong></div>
+    <div class="sk-row"><span style="font-size:15px">TOTAL AFTER SALE</span>
+      <strong style="color:#2563eb;font-size:18px">${money(t.totalAfterSale)}</strong></div>
+    <div class="sk-row sk-green"><span>DEPOSIT (${DEPOSIT_PCT}%)</span><strong>${money(-t.deposit)}</strong></div>
+    <div class="sk-row"><span style="font-size:15px">DUE AT INSTALLATION</span>
+      <strong style="color:#16a34a;font-size:18px">${money(t.dueAtInstall)}</strong></div>
+  `;
+}
+
+function downloadPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const LEFT = 20, RIGHT = 190;
+  let y = 18;
+
+  const setBlack = () => doc.setTextColor(0,0,0);
+  const setGreen = () => doc.setTextColor(22,163,74);
+  const hr = (yy) => { doc.setDrawColor(120); doc.setLineWidth(0.4); doc.line(LEFT, yy, RIGHT, yy); };
+
+  const lineItem = (label, value, opts = {}) => {
+    doc.setFontSize(opts.size || 11);
+    doc.setFont("helvetica", opts.bold ? "bold" : "normal");
+    if(opts.green) setGreen(); else setBlack();
+    doc.text(label, LEFT + (opts.indent || 0), y);
+    doc.text(value, RIGHT, y, { align: "right" });
+    y += 6;
+    if(y > 280){ doc.addPage(); y = 20; }
+  };
+
+  const t = totals();
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  setBlack();
+  doc.text(PDF_TITLE, (LEFT + RIGHT)/2, y, { align: "center" });
+  y += 12;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(`Building: ${QUOTE.width} x ${QUOTE.length} x ${QUOTE.height}ft`, LEFT, y); y += 5;
+  doc.text(`Gauge: ${QUOTE.gauge}G`, LEFT, y); y += 5;
+  doc.text("Snow Load: Standard", LEFT, y); y += 5;
+  doc.text("Sidewalls: Both", LEFT, y); y += 5;
+  doc.text("Endwalls: 1", LEFT, y); y += 5;
+  doc.text("Certification: Non-Certified", LEFT, y); y += 5;
+  doc.text("Foundation: Concrete (by customer)", LEFT, y); y += 5;
+  doc.text("Permits: Not included", LEFT, y); y += 10;
+
+  hr(y); y += 12;
+
+  lineItem(`Base (Roof+Frame) - ${QUOTE.width}x${QUOTE.priced_length} tier:`, money(QUOTE.base));
+  lineItem("Height Adder:", money(QUOTE.height_add));
+  lineItem("Sidewalls (Both):", money(QUOTE.sidewalls));
+  lineItem("Endwall (1):", money(QUOTE.endwall));
+
+  y += 6; hr(y); y += 10;
+
+  lineItem("SUBTOTAL:", money(t.subtotal), { bold:true });
+  lineItem(`SALE (${DISCOUNT_PCT}% OFF):`, money(-t.discount), { green:true });
+
+  y += 2; hr(y); y += 10;
+
+  lineItem("TOTAL AFTER SALE:", money(t.totalAfterSale), { bold:true });
+  lineItem(`DEPOSIT (${DEPOSIT_PCT}%):`, money(-t.deposit), { green:true });
+
+  y += 2; hr(y); y += 12;
+
+  lineItem("DUE AT INSTALLATION:", money(t.dueAtInstall), { bold:true, green:true, size:12 });
+
+  y += 8;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  setBlack();
+  doc.text(`Quoted on the ${QUOTE.priced_length}ft price tier - no ${QUOTE.length}ft row exists in the price list.`, LEFT, y); y += 4;
+  doc.text("Non-certified: no ground certification, no engineer stamp. Permits by customer.", LEFT, y); y += 4;
+  doc.text("Concrete foundation, grading and site prep supplied by customer.", LEFT, y);
+
+  doc.save(`HM-AFRAME-Estimate-${QUOTE.width}x${QUOTE.length}x${QUOTE.height}.pdf`);
+}
+
+document.getElementById("btnPDF").addEventListener("click", downloadPDF);
+render();
+</script>
