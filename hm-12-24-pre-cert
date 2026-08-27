@@ -76,6 +76,14 @@
         </div>
 
         <div class="sk-field">
+          <label>Roof Pitch</label>
+          <select id="roof_pitch">
+            <option value="standard" selected>Standard</option>
+            <option value="6:12">6:12 Pitch</option>
+          </select>
+        </div>
+
+        <div class="sk-field">
           <label>Snow Load</label>
           <select id="snow_load">
             <option value="standard" selected>Standard</option>
@@ -219,13 +227,6 @@
             </select>
           </div>
 
-          <div class="sk-field">
-            <label>Extra Bows (qty)</label>
-            <select id="bow_qty">
-              <option value="0" selected>0</option>
-              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-            </select>
-          </div>
         </div>
 
         <!-- Ground Certification -->
@@ -299,6 +300,8 @@
 
       <div class="sk-note">
         <strong>Note:</strong> Windows are $230 each. Snow Load 60 LB adds $3,240.
+        Gable Ends are priced per building width and 6:12 pitch per width × length;
+        if either price is missing the quote errors out instead of billing $0.
       </div>
     </div>
   </div>
@@ -322,6 +325,26 @@ const HEIGHT_ADD = {"20|6":0,"25|6":0,"30|6":0,"35|6":0,"40|6":0,"45|6":0,"50|6"
 const SIDEWALLS_2 = {"20|6":580,"25|6":700,"30|6":845,"35|6":990,"40|6":1140,"45|6":1280,"50|6":1420,"20|7":690,"25|7":835,"30|7":1060,"35|7":1170,"40|7":1355,"45|7":1495,"50|7":1660,"20|8":820,"25|8":985,"30|8":1230,"35|8":1350,"40|8":1620,"45|8":1710,"50|8":1880,"20|9":850,"25|9":1025,"30|9":1255,"35|9":1500,"40|9":1745,"45|9":1840,"50|9":2045,"20|10":935,"25|10":1170,"30|10":1420,"35|10":1735,"40|10":1960,"45|10":2075,"50|10":2310,"20|11":1085,"25|11":1325,"30|11":1610,"35|11":1870,"40|11":2180,"45|11":2305,"50|11":2600,"20|12":1135,"25|12":1410,"30|12":1735,"35|12":2060,"40|12":2405,"45|12":2550,"50|12":2850,"20|13":1240,"25|13":1560,"30|13":1900,"35|13":2255,"40|13":2620,"45|13":2795,"50|13":3240,"20|14":1350,"25|14":1710,"30|14":2080,"35|14":2455,"40|14":2850,"45|14":3055,"50|14":3605,"20|15":2165,"25|15":2705,"30|15":3250,"35|15":3750,"40|15":4325,"45|15":4900,"50|15":5480,"20|16":2440,"25|16":3030,"30|16":3655,"35|16":4265,"40|16":4895,"45|16":5470,"50|16":6080,"20|17":2700,"25|17":3365,"30|17":4040,"35|17":4670,"40|17":5345,"45|17":6010,"50|17":6690,"20|18":2950,"25|18":3690,"30|18":4415,"35|18":5165,"40|18":5885,"45|18":6605,"50|18":7320,"20|19":3230,"25|19":4025,"30|19":4825,"35|19":5620,"40|19":6425,"45|19":7225,"50|19":8050,"20|20":3480,"25|20":4325,"30|20":5810,"35|20":6055,"40|20":6920,"45|20":7780,"50|20":8650};
 
 const ENDWALL_1 = {"12|6":730,"18|6":850,"20|6":970,"22|6":1090,"24|6":1210,"12|7":820,"18|7":940,"20|7":1060,"22|7":1200,"24|7":1320,"12|8":910,"18|8":1030,"20|8":1150,"22|8":1270,"24|8":1390,"12|9":1000,"18|9":1120,"20|9":1240,"22|9":1360,"24|9":1480,"12|10":1090,"18|10":1220,"20|10":1330,"22|10":1450,"24|10":1570,"12|11":1180,"18|11":1300,"20|11":1420,"22|11":1540,"24|11":1660,"12|12":1270,"18|12":1390,"20|12":1510,"22|12":1700,"24|12":1750,"12|13":1360,"18|13":1480,"20|13":1600,"22|13":1890,"24|13":1910,"12|14":1450,"18|14":1600,"20|14":1770,"22|14":1930,"24|14":2100,"12|15":1685,"18|15":2120,"20|15":2550,"22|15":2980,"24|15":3370,"12|16":1830,"18|16":2290,"20|16":2880,"22|16":3220,"24|16":3665,"12|17":1980,"18|17":2480,"20|17":2990,"22|17":3480,"24|17":3960,"12|18":2120,"18|18":2650,"20|18":3210,"22|18":3730,"24|18":4240,"12|19":2310,"18|19":2840,"20|19":3420,"22|19":3970,"24|19":4530,"12|20":2460,"18|20":3060,"20|20":3630,"22|20":4230,"24|20":4810};
+
+/* ===== 6:12 ROOF PITCH ADDER =====
+   Keyed `width|length`, same shape as BASE_14G.
+   EMPTY UNTIL PRICING IS LOADED - selecting 6:12 errors out rather than
+   quoting $0. Fill in every width/length combo you sell, e.g.:
+     "18|30": 1450,
+*/
+const PITCH_ADD_6_12 = {
+  // "12|20":0,"12|25":0, ...
+  // "18|20":0,"18|25":0,"18|30":0, ...
+};
+
+/* ===== GABLE END (each) =====
+   Keyed by building width, same shape as the ENDWALL_1 width axis.
+   Currently $250 each at every width; the table is kept per-width so a single
+   width can be repriced without touching the others.
+*/
+const GABLE_END = {
+  12:250, 18:250, 20:250, 22:250, 24:250
+};
 
 const ACCESSORIES = {
   extra_panel: {21:130, 26:160, 31:200, 36:230, 41:260},
@@ -363,6 +386,7 @@ function getInputs(){
     w: String(document.getElementById("width_ft").value),
     L: String(document.getElementById("length_ft").value),
     h: String(document.getElementById("height_ft").value),
+    pitch: String(document.getElementById("roof_pitch").value),
 
     snow_load: String(document.getElementById("snow_load").value),
 
@@ -383,7 +407,6 @@ function getInputs(){
     brace_qty: Number(document.getElementById("brace_qty").value),
     brace_size: Number(document.getElementById("brace_size").value),
     gable_qty: Number(document.getElementById("gable_qty").value),
-    bow_qty: Number(document.getElementById("bow_qty").value),
 
     ground_cert_qty: Number(document.getElementById("ground_cert_qty").value),
     ground_cert_len: Number(document.getElementById("ground_cert_length").value),
@@ -402,6 +425,12 @@ function getBasePrice(size, gauge){
   return base14; // 14G
 }
 
+function getPitchAdder(pitch, w, L){
+  if(pitch !== "6:12") return 0;
+  const v = PITCH_ADD_6_12[`${w}|${L}`];
+  return (v === undefined) ? null : v;
+}
+
 function calcQuote(){
   const inp = getInputs();
   const size = `${inp.w}x${inp.L}`;
@@ -410,6 +439,9 @@ function calcQuote(){
   if(base === null) return {ok:false, error:`Base price not found for ${size}`};
 
   const snowAdder = (SNOW_LOAD_ADD[inp.snow_load] ?? 0);
+
+  const pitchAdder = getPitchAdder(inp.pitch, inp.w, inp.L);
+  if(pitchAdder === null) return {ok:false, error:`6:12 pitch price not loaded for ${size} - add it to PITCH_ADD_6_12`};
 
   const heightAdder = HEIGHT_ADD[`${inp.L}|${inp.h}`];
   if(heightAdder === undefined) return {ok:false, error:`Height adder not found`};
@@ -433,6 +465,15 @@ function calcQuote(){
   acc.garage_frames = inp.garage_frame_qty * ACCESSORIES.garage_frame;
   acc.braces = inp.brace_qty * (ACCESSORIES.brace[inp.brace_size] || 0);
 
+  // Gable ends - priced per building width
+  if(inp.gable_qty > 0){
+    const gableEach = GABLE_END[inp.w];
+    if(gableEach === undefined) return {ok:false, error:`Gable end price not loaded for ${inp.w}ft width - add it to GABLE_END`};
+    acc.gable_ends = inp.gable_qty * gableEach;
+  } else {
+    acc.gable_ends = 0;
+  }
+
   // Ground Cert
   const gcBase = (ACCESSORIES.ground_cert[inp.ground_cert_len] || 0);
   const gcMult = inp.ground_cert_doubleleg ? 2 : 1;
@@ -444,11 +485,16 @@ function calcQuote(){
   const accessoriesTotal = Object.values(acc).reduce((sum, v) => sum + v, 0);
 
   // ✅ Total includes Snow Load Adder
-  const total = base + snowAdder + heightAdder + sidewallsTotal + endwallsTotal + accessoriesTotal;
+  const total = base + snowAdder + pitchAdder + heightAdder + sidewallsTotal + endwallsTotal + accessoriesTotal;
+
+  // Certification is driven solely by the Ground Certification line so the two
+  // can never disagree: qty 0 = non-certified.
+  const certified = inp.ground_cert_qty > 0;
 
   return {
     ok:true, ...inp, size,
     base, snowAdder,
+    pitchAdder, certified,
     heightAdder,
     sidewalls2, sidewallsTotal,
     endwall1, endwallsTotal,
@@ -465,13 +511,21 @@ function render(r){
     return;
   }
 
+  const pitchText = (r.pitch === "6:12") ? "6:12 Pitch" : "Standard Pitch";
+  const certText = r.certified ? "Certified" : "Non-Certified";
+
   let html = `
-    <div class="sk-row"><span>Building</span><strong>${r.size} × ${r.h}ft • ${r.gauge}G</strong></div>
+    <div class="sk-row"><span>Building</span><strong>${r.size} × ${r.h}ft • ${r.gauge}G • ${pitchText}</strong></div>
+    <div class="sk-row"><span>Certification</span><strong>${certText}</strong></div>
     <div class="sk-row"><span>Base (Roof+Frame)</span><strong>${money(r.base)}</strong></div>
   `;
 
   if((r.snowAdder || 0) > 0){
     html += `<div class="sk-row"><span>Snow Load 60 LB</span><strong>${money(r.snowAdder)}</strong></div>`;
+  }
+
+  if((r.pitchAdder || 0) > 0){
+    html += `<div class="sk-row"><span>6:12 Roof Pitch</span><strong>${money(r.pitchAdder)}</strong></div>`;
   }
 
   html += `<div class="sk-row"><span>Height Adder</span><strong>${money(r.heightAdder)}</strong></div>`;
@@ -503,6 +557,7 @@ function render(r){
   addRow(`Door Frames (${r.door_frame_qty})`, acc.door_frames);
   addRow(`Garage Frames (${r.garage_frame_qty})`, acc.garage_frames);
   addRow(`Braces (${r.brace_qty})`, acc.braces);
+  addRow(`Gable Ends (${r.gable_qty})`, acc.gable_ends);
 
   if(acc.ground_certification > 0){
     const x2 = r.ground_cert_doubleleg ? " (x2)" : "";
@@ -538,6 +593,7 @@ function resetForm(){
   document.getElementById("width_ft").value = "20";
   document.getElementById("length_ft").value = "35";
   document.getElementById("height_ft").value = "11";
+  document.getElementById("roof_pitch").value = "standard";
   document.getElementById("snow_load").value = "standard";
   document.getElementById("sidewall_qty").value = "0";
   document.getElementById("endwall_qty").value = "0";
@@ -552,7 +608,6 @@ function resetForm(){
   document.getElementById("garage_frame_qty").value = "0";
   document.getElementById("brace_qty").value = "0";
   document.getElementById("gable_qty").value = "0";
-  document.getElementById("bow_qty").value = "0";
 
   document.getElementById("ground_cert_qty").value = "0";
   document.getElementById("ground_cert_doubleleg").checked = false;
@@ -636,6 +691,8 @@ function downloadPDF(r){
 
   doc.text(`Building: ${r.size} × ${r.h}ft`, LEFT, y); y += 5;
   doc.text(`Gauge: ${r.gauge}G`, LEFT, y); y += 5;
+  doc.text(`Roof Pitch: ${(r.pitch === "6:12") ? "6:12" : "Standard"}`, LEFT, y); y += 5;
+  doc.text(`Certification: ${r.certified ? "Certified" : "Non-Certified"}`, LEFT, y); y += 5;
   doc.text(`Snow Load: ${snowText}`, LEFT, y); y += 5;
   doc.text(`Sidewalls: ${sidewallsText}`, LEFT, y); y += 5;
   doc.text(`Endwalls: ${endwallsText}`, LEFT, y); y += 10;
@@ -646,6 +703,10 @@ function downloadPDF(r){
 
   if((r.snowAdder || 0) > 0){
     lineItem("Snow Load 60 LB:", money2(r.snowAdder));
+  }
+
+  if((r.pitchAdder || 0) > 0){
+    lineItem("6:12 Roof Pitch:", money2(r.pitchAdder));
   }
 
   lineItem("Height Adder:", money2(r.heightAdder));
@@ -674,6 +735,7 @@ function downloadPDF(r){
     addAcc("Door Frame Outs", r.door_frame_qty, acc.door_frames || 0);
     addAcc("Garage Frame Outs", r.garage_frame_qty, acc.garage_frames || 0);
     addAcc("Braces", r.brace_qty, acc.braces || 0);
+    addAcc("Gable Ends", r.gable_qty, acc.gable_ends || 0);
 
     if((acc.ground_certification || 0) > 0){
       const x2 = r.ground_cert_doubleleg ? " x2" : "";
@@ -724,6 +786,11 @@ document.getElementById("length_ft").addEventListener("change", ()=>{
 });
 
 document.getElementById("gauge").addEventListener("change", ()=>{
+  lastResult = calcQuote();
+  render(lastResult);
+});
+
+document.getElementById("roof_pitch").addEventListener("change", ()=>{
   lastResult = calcQuote();
   render(lastResult);
 });
