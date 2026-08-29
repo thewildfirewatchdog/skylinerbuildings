@@ -27,6 +27,7 @@
   .sk-row:last-child{border-bottom:0}
   .sk-row strong{font-weight:900}
   .sk-subtotal{background:#f0f9ff;padding:8px;border-radius:8px;margin:8px 0}
+  .sk-warn{margin-top:14px;background:#fffbeb;border:1px solid #fcd34d;color:#92400e;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.4;font-weight:700}
   .sk-note{margin-top:10px;font-size:12px;color:#6b7280;line-height:1.35}
   .sk-badge{display:inline-block;background:#ecfeff;color:#155e75;border:1px solid #a5f3fc;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:900}
   @media (max-width:980px){.sk-grid{grid-template-columns:repeat(2,1fr)}}
@@ -55,6 +56,7 @@
           <label>Width (ft)</label>
           <select id="width_ft">
             <option>12</option><option>18</option><option selected>20</option><option>22</option><option>24</option>
+            <option>26</option><option>28</option><option>30</option>
           </select>
         </div>
 
@@ -76,10 +78,11 @@
         </div>
 
         <div class="sk-field">
-          <label>Snow Load</label>
+          <label>Certification / Load Rating</label>
           <select id="snow_load">
-            <option value="standard" selected>Standard</option>
-            <option value="60">60 LB (+$3,240)</option>
+            <option value="standard" selected>Standard (Non-Certified)</option>
+            <option value="40">Pre-Certified 40 PSF (+$2,160)</option>
+            <option value="60">Pre-Certified 60 PSF (+$3,240)</option>
           </select>
         </div>
 
@@ -287,6 +290,8 @@
         </div>
       </div>
 
+      <div class="sk-warn" id="pricingWarn" hidden></div>
+
       <div class="sk-actions">
         <button class="sk-btn primary" id="btnCalc">Calculate Quote</button>
         <button class="sk-btn light" id="btnReset">Reset All</button>
@@ -298,7 +303,7 @@
       </div>
 
       <div class="sk-note">
-        <strong>Note:</strong> Windows are $230 each. Snow Load 60 LB adds $3,240.
+        <strong>Note:</strong> Windows are $230 each. Pre-Certified 40 PSF adds $2,160; 60 PSF adds $3,240.
       </div>
     </div>
   </div>
@@ -314,14 +319,32 @@ const BASE_14G = {
   "18x20":2795,"18x25":3395,"18x30":3995,"18x35":4495,"18x40":4995,"18x45":5595,"18x50":6195,
   "20x20":2995,"20x25":3595,"20x30":4195,"20x35":4795,"20x40":5595,"20x45":6295,"20x50":6995,
   "22x20":3395,"22x25":3995,"22x30":4695,"22x35":5395,"22x40":6195,"22x45":6895,"22x50":7595,
-  "24x20":3595,"24x25":4595,"24x30":5195,"24x35":5895,"24x40":6595,"24x45":7595,"24x50":8395
+  "24x20":3595,"24x25":4595,"24x30":5195,"24x35":5895,"24x40":6595,"24x45":7595,"24x50":8395,
+
+  /* === WIDE-SPAN 26/28/30 — PLACEHOLDER PRICING, NOT FROM THE PRICE SHEET ===
+     Derived from the 24-wide $/sqft rate for each length, times a span uplift
+     for the deeper trusses a wider clear span needs (26=+3%, 28=+6%, 30=+10%),
+     rounded to the sheet's x95 endings. REPLACE with real supplier numbers. */
+  "26x20":3995,"26x25":5095,"26x30":5795,"26x35":6595,"26x40":7395,"26x45":8495,"26x50":9395,
+  "28x20":4395,"28x25":5695,"28x30":6395,"28x35":7295,"28x40":8195,"28x45":9395,"28x50":10395,
+  "30x20":4895,"30x25":6295,"30x30":7095,"30x35":8095,"30x40":9095,"30x45":10395,"30x50":11495
 };
+
+/* Sizes quoted from extrapolated rather than published pricing. */
+const PLACEHOLDER_WIDTHS = ["26","28","30"];
 
 const HEIGHT_ADD = {"20|6":0,"25|6":0,"30|6":0,"35|6":0,"40|6":0,"45|6":0,"50|6":0,"20|7":120,"25|7":145,"30|7":160,"35|7":190,"40|7":215,"45|7":250,"50|7":270,"20|8":230,"25|8":275,"30|8":210,"35|8":370,"40|8":420,"45|8":490,"50|8":540,"20|9":335,"25|9":410,"30|9":460,"35|9":590,"40|9":700,"45|9":730,"50|9":810,"20|10":648,"25|10":820,"30|10":953,"35|10":1115,"40|10":1290,"45|10":1485,"50|10":1660,"20|11":700,"25|11":885,"30|11":1030,"35|11":1205,"40|11":1390,"45|11":1605,"50|11":1790,"20|12":785,"25|12":953,"30|12":1105,"35|12":1295,"40|12":1493,"45|12":1725,"50|12":1925,"20|13":1780,"25|13":2315,"30|13":2500,"35|13":2900,"40|13":3380,"45|13":3860,"50|13":4340,"20|14":1870,"25|14":2450,"30|14":2530,"35|14":3020,"40|14":3500,"45|14":3980,"50|14":4450,"20|15":1930,"25|15":2490,"30|15":2650,"35|15":3140,"40|15":3620,"45|15":4100,"50|15":4580,"20|16":2170,"25|16":2530,"30|16":2890,"35|16":3370,"40|16":3860,"45|16":4340,"50|16":4620,"20|17":2720,"25|17":3080,"30|17":3440,"35|17":4170,"40|17":4610,"45|17":5055,"50|17":5485,"20|18":2830,"25|18":3210,"30|18":3600,"35|18":4360,"40|18":4825,"45|18":5290,"50|18":5760,"20|19":2950,"25|19":3350,"30|19":3760,"35|19":4560,"40|19":5050,"45|19":5550,"50|19":6050,"20|20":3070,"25|20":3485,"30|20":3910,"35|20":4760,"40|20":5285,"45|20":5815,"50|20":6340};
 
 const SIDEWALLS_2 = {"20|6":580,"25|6":700,"30|6":845,"35|6":990,"40|6":1140,"45|6":1280,"50|6":1420,"20|7":690,"25|7":835,"30|7":1060,"35|7":1170,"40|7":1355,"45|7":1495,"50|7":1660,"20|8":820,"25|8":985,"30|8":1230,"35|8":1350,"40|8":1620,"45|8":1710,"50|8":1880,"20|9":850,"25|9":1025,"30|9":1255,"35|9":1500,"40|9":1745,"45|9":1840,"50|9":2045,"20|10":935,"25|10":1170,"30|10":1420,"35|10":1735,"40|10":1960,"45|10":2075,"50|10":2310,"20|11":1085,"25|11":1325,"30|11":1610,"35|11":1870,"40|11":2180,"45|11":2305,"50|11":2600,"20|12":1135,"25|12":1410,"30|12":1735,"35|12":2060,"40|12":2405,"45|12":2550,"50|12":2850,"20|13":1240,"25|13":1560,"30|13":1900,"35|13":2255,"40|13":2620,"45|13":2795,"50|13":3240,"20|14":1350,"25|14":1710,"30|14":2080,"35|14":2455,"40|14":2850,"45|14":3055,"50|14":3605,"20|15":2165,"25|15":2705,"30|15":3250,"35|15":3750,"40|15":4325,"45|15":4900,"50|15":5480,"20|16":2440,"25|16":3030,"30|16":3655,"35|16":4265,"40|16":4895,"45|16":5470,"50|16":6080,"20|17":2700,"25|17":3365,"30|17":4040,"35|17":4670,"40|17":5345,"45|17":6010,"50|17":6690,"20|18":2950,"25|18":3690,"30|18":4415,"35|18":5165,"40|18":5885,"45|18":6605,"50|18":7320,"20|19":3230,"25|19":4025,"30|19":4825,"35|19":5620,"40|19":6425,"45|19":7225,"50|19":8050,"20|20":3480,"25|20":4325,"30|20":5810,"35|20":6055,"40|20":6920,"45|20":7780,"50|20":8650};
 
-const ENDWALL_1 = {"12|6":730,"18|6":850,"20|6":970,"22|6":1090,"24|6":1210,"12|7":820,"18|7":940,"20|7":1060,"22|7":1200,"24|7":1320,"12|8":910,"18|8":1030,"20|8":1150,"22|8":1270,"24|8":1390,"12|9":1000,"18|9":1120,"20|9":1240,"22|9":1360,"24|9":1480,"12|10":1090,"18|10":1220,"20|10":1330,"22|10":1450,"24|10":1570,"12|11":1180,"18|11":1300,"20|11":1420,"22|11":1540,"24|11":1660,"12|12":1270,"18|12":1390,"20|12":1510,"22|12":1700,"24|12":1750,"12|13":1360,"18|13":1480,"20|13":1600,"22|13":1890,"24|13":1910,"12|14":1450,"18|14":1600,"20|14":1770,"22|14":1930,"24|14":2100,"12|15":1685,"18|15":2120,"20|15":2550,"22|15":2980,"24|15":3370,"12|16":1830,"18|16":2290,"20|16":2880,"22|16":3220,"24|16":3665,"12|17":1980,"18|17":2480,"20|17":2990,"22|17":3480,"24|17":3960,"12|18":2120,"18|18":2650,"20|18":3210,"22|18":3730,"24|18":4240,"12|19":2310,"18|19":2840,"20|19":3420,"22|19":3970,"24|19":4530,"12|20":2460,"18|20":3060,"20|20":3630,"22|20":4230,"24|20":4810};
+const ENDWALL_1 = {"12|6":730,"18|6":850,"20|6":970,"22|6":1090,"24|6":1210,"12|7":820,"18|7":940,"20|7":1060,"22|7":1200,"24|7":1320,"12|8":910,"18|8":1030,"20|8":1150,"22|8":1270,"24|8":1390,"12|9":1000,"18|9":1120,"20|9":1240,"22|9":1360,"24|9":1480,"12|10":1090,"18|10":1220,"20|10":1330,"22|10":1450,"24|10":1570,"12|11":1180,"18|11":1300,"20|11":1420,"22|11":1540,"24|11":1660,"12|12":1270,"18|12":1390,"20|12":1510,"22|12":1700,"24|12":1750,"12|13":1360,"18|13":1480,"20|13":1600,"22|13":1890,"24|13":1910,"12|14":1450,"18|14":1600,"20|14":1770,"22|14":1930,"24|14":2100,"12|15":1685,"18|15":2120,"20|15":2550,"22|15":2980,"24|15":3370,"12|16":1830,"18|16":2290,"20|16":2880,"22|16":3220,"24|16":3665,"12|17":1980,"18|17":2480,"20|17":2990,"22|17":3480,"24|17":3960,"12|18":2120,"18|18":2650,"20|18":3210,"22|18":3730,"24|18":4240,"12|19":2310,"18|19":2840,"20|19":3420,"22|19":3970,"24|19":4530,"12|20":2460,"18|20":3060,"20|20":3630,"22|20":4230,"24|20":4810,
+
+  /* === WIDE-SPAN 26/28/30 — PLACEHOLDER PRICING, NOT FROM THE PRICE SHEET ===
+     Extended past 24 at the marginal $/ft of width seen across the 18->24
+     range at each height. REPLACE with real supplier numbers. */
+  "26|6":1330,"26|7":1445,"26|8":1510,"26|9":1600,"26|10":1685,"26|11":1780,"26|12":1870,"26|13":2055,"26|14":2265,"26|15":3785,"26|16":4125,"26|17":4455,"26|18":4770,"26|19":5095,"26|20":5395,
+  "28|6":1450,"28|7":1575,"28|8":1630,"28|9":1720,"28|10":1805,"28|11":1900,"28|12":1990,"28|13":2195,"28|14":2435,"28|15":4205,"28|16":4580,"28|17":4945,"28|18":5300,"28|19":5655,"28|20":5975,
+  "30|6":1570,"30|7":1700,"30|8":1750,"30|9":1840,"30|10":1920,"30|11":2020,"30|12":2110,"30|13":2340,"30|14":2600,"30|15":4620,"30|16":5040,"30|17":5440,"30|18":5830,"30|19":6220,"30|20":6560};
 
 const ACCESSORIES = {
   extra_panel: {21:130, 26:160, 31:200, 36:230, 41:260},
@@ -341,8 +364,18 @@ const ACCESSORIES = {
 /* ===== SNOW LOAD ADDER ===== */
 const SNOW_LOAD_ADD = {
   standard: 0,
+  "40": 2160,           // PLACEHOLDER: pro-rated off the 60 PSF price (40/60 x 3,240)
   "60": 3240            // ✅ ADD: Snow Load 60 LB = $3,240
 };
+
+const SNOW_LOAD_LABEL = {
+  standard: "Standard (Non-Certified)",
+  "40": "Pre-Certified 40 PSF",
+  "60": "Pre-Certified 60 PSF"
+};
+
+/* Load ratings quoted from extrapolated rather than published pricing. */
+const PLACEHOLDER_RATINGS = ["40"];
 
 /* ===== PDF SETTINGS ===== */
 const PDF_TITLE    = "HM A-FRAME ROOF - Estimate";
@@ -471,7 +504,8 @@ function render(r){
   `;
 
   if((r.snowAdder || 0) > 0){
-    html += `<div class="sk-row"><span>Snow Load 60 LB</span><strong>${money(r.snowAdder)}</strong></div>`;
+    const ratingLabel = SNOW_LOAD_LABEL[r.snow_load] || "Load Rating";
+    html += `<div class="sk-row"><span>${ratingLabel}</span><strong>${money(r.snowAdder)}</strong></div>`;
   }
 
   html += `<div class="sk-row"><span>Height Adder</span><strong>${money(r.heightAdder)}</strong></div>`;
@@ -525,6 +559,23 @@ function render(r){
   out.innerHTML = html;
 }
 
+/* Flags any line whose price is extrapolated rather than off the price sheet,
+   so an estimate is never handed to a customer as a published number. */
+function updatePricingWarning(){
+  const w = String(document.getElementById("width_ft").value);
+  const rating = String(document.getElementById("snow_load").value);
+  const flagged = [];
+  if(PLACEHOLDER_WIDTHS.includes(w)) flagged.push(`${w}ft width`);
+  if(PLACEHOLDER_RATINGS.includes(rating)) flagged.push(`${rating} PSF certification`);
+
+  const el = document.getElementById("pricingWarn");
+  if(flagged.length === 0){ el.hidden = true; el.textContent = ""; return; }
+  el.textContent = `PRELIMINARY PRICING: ${flagged.join(" and ")} ` +
+    `${flagged.length > 1 ? "are" : "is"} not on the current price sheet. ` +
+    `This line is extrapolated — confirm with the supplier before quoting a customer.`;
+  el.hidden = false;
+}
+
 function syncGroundCertLength(){
   const L = Number(document.getElementById("length_ft").value);
   const target = String(L + 1); // 20->21, 25->26, etc.
@@ -561,6 +612,7 @@ function resetForm(){
   document.getElementById("concrete_bolt_qty").value = "0";
 
   syncGroundCertLength();
+  updatePricingWarning();
   lastResult = calcQuote();
   render(lastResult);
 }
@@ -632,11 +684,11 @@ function downloadPDF(r){
 
   const sidewallsText = (r.sidewall_qty === 2) ? "Both" : "None";
   const endwallsText = (r.endwall_qty > 0) ? String(r.endwall_qty) : "None";
-  const snowText = (r.snow_load === "60") ? "60 LB" : "Standard";
+  const snowText = SNOW_LOAD_LABEL[r.snow_load] || "Standard";
 
   doc.text(`Building: ${r.size} × ${r.h}ft`, LEFT, y); y += 5;
   doc.text(`Gauge: ${r.gauge}G`, LEFT, y); y += 5;
-  doc.text(`Snow Load: ${snowText}`, LEFT, y); y += 5;
+  doc.text(`Certification: ${snowText}`, LEFT, y); y += 5;
   doc.text(`Sidewalls: ${sidewallsText}`, LEFT, y); y += 5;
   doc.text(`Endwalls: ${endwallsText}`, LEFT, y); y += 10;
 
@@ -645,7 +697,7 @@ function downloadPDF(r){
   lineItem("Base (Roof+Frame):", money2(r.base));
 
   if((r.snowAdder || 0) > 0){
-    lineItem("Snow Load 60 LB:", money2(r.snowAdder));
+    lineItem(`${SNOW_LOAD_LABEL[r.snow_load] || "Load Rating"}:`, money2(r.snowAdder));
   }
 
   lineItem("Height Adder:", money2(r.heightAdder));
@@ -710,6 +762,7 @@ function downloadPDF(r){
 let lastResult = null;
 
 document.getElementById("btnCalc").addEventListener("click", ()=>{
+  updatePricingWarning();
   lastResult = calcQuote();
   render(lastResult);
 });
@@ -723,18 +776,31 @@ document.getElementById("length_ft").addEventListener("change", ()=>{
   render(lastResult);
 });
 
+document.getElementById("width_ft").addEventListener("change", ()=>{
+  updatePricingWarning();
+  lastResult = calcQuote();
+  render(lastResult);
+});
+
+document.getElementById("height_ft").addEventListener("change", ()=>{
+  lastResult = calcQuote();
+  render(lastResult);
+});
+
 document.getElementById("gauge").addEventListener("change", ()=>{
   lastResult = calcQuote();
   render(lastResult);
 });
 
 document.getElementById("snow_load").addEventListener("change", ()=>{
+  updatePricingWarning();
   lastResult = calcQuote();
   render(lastResult);
 });
 
 // auto-calc on load
 syncGroundCertLength();
+updatePricingWarning();
 lastResult = calcQuote();
 render(lastResult);
 </script>
