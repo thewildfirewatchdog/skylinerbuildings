@@ -208,9 +208,8 @@
           <div class="sk-field">
             <label>Additional Braces</label>
             <select id="brace_qty">
-              <option value="0" selected>0</option>
-              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-              <option value="4">4</option><option value="5">5</option>
+              <option value="auto" selected data-auto="post">Auto - 1 per post</option>
+              <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option>
             </select>
           </div>
           <div class="sk-field">
@@ -276,8 +275,8 @@
           <div class="sk-field">
             <label>Mobile Home Anchors</label>
             <select id="mobile_anchor_qty">
-              <option value="0" selected>0</option>
-              <option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option>
+              <option value="auto" selected data-auto="post">Auto - 1 per post</option>
+              <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option>
             </select>
           </div>
           <div class="sk-field">
@@ -291,8 +290,9 @@
           <div class="sk-field">
             <label>Concrete Anchor Bolts</label>
             <select id="concrete_bolt_qty">
-              <option value="0" selected>0</option>
-              <option value="4">4</option><option value="8">8</option><option value="12">12</option><option value="16">16</option>
+              <option value="0" selected>0 (ground install)</option>
+              <option value="auto" data-auto="post">Auto - 1 per post</option>
+              <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option>
             </select>
           </div>
         </div>
@@ -311,6 +311,7 @@
       <div class="sk-note">
         <strong>Note:</strong> Windows are $230 each. Gable ends are $190 each. Snow Load 60 LB adds $3,240.
         Partial sidewalls (3/4/5 ft) are prorated from the 6 ft wall price for that length.
+        Braces and anchors default to 1 per post; posts are bows x 2, with bows at 5 ft on center.
       </div>
     </div>
   </div>
@@ -350,6 +351,19 @@ const ACCESSORIES = {
   concrete_bolt: 10,
   ground_cert: {21:595, 26:695, 31:695, 36:795, 41:895, 46:995, 51:1195}
 };
+
+/* ===== FRAME GEOMETRY =====
+   Legs sit 5 ft on center, so an ordered frame length of 21/26/31/36/41/46/51 ft
+   carries 5/6/7/8/9/10/11 bows - the same ladder as the ground-cert lengths.
+   Posts = bows x 2 (one leg each side).
+*/
+function bowsForLength(L){
+  const frame = Number(L) + 1;           // 40 ft roof is ordered as a 41 ft frame
+  return Math.floor((frame - 1) / 5) + 1;
+}
+function postsForLength(L){
+  return bowsForLength(L) * 2;
+}
 
 /* ===== SNOW LOAD ADDER ===== */
 const SNOW_LOAD_ADD = {
@@ -394,7 +408,7 @@ function getInputs(){
     window_frame_qty: Number(document.getElementById("window_frame_qty").value),
     door_frame_qty: Number(document.getElementById("door_frame_qty").value),
     garage_frame_qty: Number(document.getElementById("garage_frame_qty").value),
-    brace_qty: Number(document.getElementById("brace_qty").value),
+    brace_qty: String(document.getElementById("brace_qty").value),
     brace_size: Number(document.getElementById("brace_size").value),
     gable_qty: Number(document.getElementById("gable_qty").value),
     bow_qty: Number(document.getElementById("bow_qty").value),
@@ -403,9 +417,9 @@ function getInputs(){
     ground_cert_len: Number(document.getElementById("ground_cert_length").value),
     ground_cert_doubleleg: document.getElementById("ground_cert_doubleleg").checked,
 
-    mobile_anchor_qty: Number(document.getElementById("mobile_anchor_qty").value),
+    mobile_anchor_qty: String(document.getElementById("mobile_anchor_qty").value),
     mobile_anchor_install: document.getElementById("mobile_anchor_install").value,
-    concrete_bolt_qty: Number(document.getElementById("concrete_bolt_qty").value)
+    concrete_bolt_qty: String(document.getElementById("concrete_bolt_qty").value)
   };
 }
 
@@ -456,7 +470,16 @@ function calcQuote(){
   acc.window_frames = inp.window_frame_qty * ACCESSORIES.window_frame;
   acc.door_frames = inp.door_frame_qty * ACCESSORIES.door_frame;
   acc.garage_frames = inp.garage_frame_qty * ACCESSORIES.garage_frame;
-  acc.braces = inp.brace_qty * (ACCESSORIES.brace[inp.brace_size] || 0);
+  // One brace and one anchor per post unless the user overrides the quantity.
+  const bows = bowsForLength(inp.L);
+  const posts = postsForLength(inp.L);
+  const perPost = (v) => v === "auto" ? posts : Number(v);
+
+  const braceQty  = perPost(inp.brace_qty);
+  const anchorQty = perPost(inp.mobile_anchor_qty);
+  const boltQty   = perPost(inp.concrete_bolt_qty);
+
+  acc.braces = braceQty * (ACCESSORIES.brace[inp.brace_size] || 0);
   acc.gables = inp.gable_qty * ACCESSORIES.gable;
 
   // Ground Cert
@@ -464,8 +487,8 @@ function calcQuote(){
   const gcMult = inp.ground_cert_doubleleg ? 2 : 1;
   acc.ground_certification = inp.ground_cert_qty * gcBase * gcMult;
 
-  acc.mobile_anchors = inp.mobile_anchor_qty * (ACCESSORIES.mobile_anchor[inp.mobile_anchor_install] || 0);
-  acc.concrete_bolts = inp.concrete_bolt_qty * ACCESSORIES.concrete_bolt;
+  acc.mobile_anchors = anchorQty * (ACCESSORIES.mobile_anchor[inp.mobile_anchor_install] || 0);
+  acc.concrete_bolts = boltQty * ACCESSORIES.concrete_bolt;
 
   const accessoriesTotal = Object.values(acc).reduce((sum, v) => sum + v, 0);
 
@@ -474,6 +497,8 @@ function calcQuote(){
 
   return {
     ok:true, ...inp, size,
+    bows, posts,
+    brace_qty: braceQty, mobile_anchor_qty: anchorQty, concrete_bolt_qty: boltQty,
     base, snowAdder,
     heightAdder,
     sidewalls2, sidewallBoth, sidewallsTotal, sidewallWallH,
@@ -493,6 +518,7 @@ function render(r){
 
   let html = `
     <div class="sk-row"><span>Building</span><strong>${r.size} × ${r.h}ft • ${r.gauge}G</strong></div>
+    <div class="sk-row"><span>Frame</span><strong>${r.bows} bows @ 5ft O.C. • ${r.posts} posts</strong></div>
     <div class="sk-row"><span>Base (Roof+Frame)</span><strong>${money(r.base)}</strong></div>
   `;
 
@@ -540,6 +566,10 @@ function render(r){
   addRow(`Mobile Anchors (${r.mobile_anchor_qty})`, acc.mobile_anchors);
   addRow(`Concrete Bolts (${r.concrete_bolt_qty})`, acc.concrete_bolts);
 
+  if(r.mobile_anchor_qty > 0 && r.concrete_bolt_qty > 0){
+    accHtml += `<div class="sk-row"><span style="color:#b45309">⚠ Both anchor types selected</span><strong style="color:#b45309">Check this is intended</strong></div>`;
+  }
+
   if(hasAcc){
     html += `<div class="sk-subtotal"><div class="sk-row"><span>Accessories Subtotal</span><strong>${money(r.accessoriesTotal)}</strong></div></div>`;
     html += accHtml;
@@ -551,6 +581,14 @@ function render(r){
           </div>`;
 
   out.innerHTML = html;
+}
+
+function syncAutoLabels(){
+  const posts = postsForLength(document.getElementById("length_ft").value);
+  ["brace_qty","mobile_anchor_qty","concrete_bolt_qty"].forEach(id => {
+    const opt = document.querySelector(`#${id} option[data-auto="post"]`);
+    if(opt) opt.textContent = `Auto - 1 per post (${posts})`;
+  });
 }
 
 function syncGroundCertLength(){
@@ -579,17 +617,18 @@ function resetForm(){
   document.getElementById("window_frame_qty").value = "0";
   document.getElementById("door_frame_qty").value = "0";
   document.getElementById("garage_frame_qty").value = "0";
-  document.getElementById("brace_qty").value = "0";
+  document.getElementById("brace_qty").value = "auto";
   document.getElementById("gable_qty").value = "0";
   document.getElementById("bow_qty").value = "0";
 
   document.getElementById("ground_cert_qty").value = "0";
   document.getElementById("ground_cert_doubleleg").checked = false;
 
-  document.getElementById("mobile_anchor_qty").value = "0";
+  document.getElementById("mobile_anchor_qty").value = "auto";
   document.getElementById("concrete_bolt_qty").value = "0";
 
   syncGroundCertLength();
+  syncAutoLabels();
   lastResult = calcQuote();
   render(lastResult);
 }
@@ -667,6 +706,7 @@ function downloadPDF(r){
 
   doc.text(`Building: ${r.size} × ${r.h}ft`, LEFT, y); y += 5;
   doc.text(`Gauge: ${r.gauge}G`, LEFT, y); y += 5;
+  doc.text(`Frame: ${r.bows} bows @ 5ft O.C. - ${r.posts} posts`, LEFT, y); y += 5;
   doc.text(`Snow Load: ${snowText}`, LEFT, y); y += 5;
   doc.text(`Sidewalls: ${sidewallsText}`, LEFT, y); y += 5;
   doc.text(`Endwalls: ${endwallsText}`, LEFT, y); y += 10;
@@ -751,11 +791,13 @@ document.getElementById("btnPDF").addEventListener("click", ()=>downloadPDF(last
 
 document.getElementById("length_ft").addEventListener("change", ()=>{
   syncGroundCertLength();
+  syncAutoLabels();
   lastResult = calcQuote();
   render(lastResult);
 });
 
-["width_ft","height_ft","sidewall_qty","sidewall_height","endwall_qty","gable_qty"].forEach(id=>{
+["width_ft","height_ft","sidewall_qty","sidewall_height","endwall_qty","gable_qty",
+  "brace_qty","brace_size","mobile_anchor_qty","mobile_anchor_install","concrete_bolt_qty"].forEach(id=>{
   document.getElementById(id).addEventListener("change", ()=>{
     lastResult = calcQuote();
     render(lastResult);
@@ -774,6 +816,7 @@ document.getElementById("snow_load").addEventListener("change", ()=>{
 
 // auto-calc on load
 syncGroundCertLength();
+syncAutoLabels();
 lastResult = calcQuote();
 render(lastResult);
 </script>
