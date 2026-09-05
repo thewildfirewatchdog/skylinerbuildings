@@ -61,7 +61,7 @@
         <div class="sk-field">
           <label>Length (ft)</label>
           <select id="length_ft">
-            <option>20</option><option>25</option><option>30</option><option selected>35</option><option>40</option><option>45</option><option>50</option>
+            <option>20</option><option>25</option><option>30</option><option>35</option><option selected>40</option><option>45</option><option>50</option>
           </select>
         </div>
 
@@ -69,8 +69,8 @@
           <label>Leg Height (ft)</label>
           <select id="height_ft">
             <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
-            <option selected>11</option>
-            <option>12</option><option>13</option><option>14</option><option>15</option><option>16</option>
+            <option>11</option>
+            <option selected>12</option><option>13</option><option>14</option><option>15</option><option>16</option>
             <option>17</option><option>18</option><option>19</option><option>20</option>
           </select>
         </div>
@@ -87,7 +87,18 @@
           <label>Sidewalls</label>
           <select id="sidewall_qty">
             <option value="0" selected>None (0)</option>
+            <option value="1">One Side (1)</option>
             <option value="2">Both Sides (2)</option>
+          </select>
+        </div>
+
+        <div class="sk-field">
+          <label>Sidewall Height</label>
+          <select id="sidewall_height">
+            <option value="full" selected>Full (leg height)</option>
+            <option value="3">3 ft partial</option>
+            <option value="4">4 ft partial</option>
+            <option value="5">5 ft partial</option>
           </select>
         </div>
 
@@ -215,7 +226,7 @@
             <label>Gable Ends (qty)</label>
             <select id="gable_qty">
               <option value="0" selected>0</option>
-              <option value="1">1</option><option value="2">2</option>
+              <option value="1">1 ($190)</option><option value="2">2 ($380)</option>
             </select>
           </div>
 
@@ -298,7 +309,8 @@
       </div>
 
       <div class="sk-note">
-        <strong>Note:</strong> Windows are $230 each. Snow Load 60 LB adds $3,240.
+        <strong>Note:</strong> Windows are $230 each. Gable ends are $190 each. Snow Load 60 LB adds $3,240.
+        Partial sidewalls (3/4/5 ft) are prorated from the 6 ft wall price for that length.
       </div>
     </div>
   </div>
@@ -333,6 +345,7 @@ const ACCESSORIES = {
   door_frame: 160,
   garage_frame: 300,
   brace: {2:10, 3:15, 4:20},
+  gable: 190,               // Gable end - $190 each
   mobile_anchor: {installed:35, not_installed:30},
   concrete_bolt: 10,
   ground_cert: {21:595, 26:695, 31:695, 36:795, 41:895, 46:995, 51:1195}
@@ -367,6 +380,7 @@ function getInputs(){
     snow_load: String(document.getElementById("snow_load").value),
 
     sidewall_qty: Number(document.getElementById("sidewall_qty").value),
+    sidewall_height: String(document.getElementById("sidewall_height").value),
     endwall_qty: Number(document.getElementById("endwall_qty").value),
 
     extra_panel_qty: Number(document.getElementById("extra_panel_qty").value),
@@ -414,9 +428,20 @@ function calcQuote(){
   const heightAdder = HEIGHT_ADD[`${inp.L}|${inp.h}`];
   if(heightAdder === undefined) return {ok:false, error:`Height adder not found`};
 
+  // Sidewalls. Full height uses the table row for the leg height.
+  // Partial walls (3/4/5 ft) are prorated off the 6 ft row: price6 / 6 * wallHeight.
   const sidewalls2 = SIDEWALLS_2[`${inp.L}|${inp.h}`];
   if(sidewalls2 === undefined) return {ok:false, error:`Sidewall price not found`};
-  const sidewallsTotal = inp.sidewall_qty === 2 ? sidewalls2 : 0;
+
+  const partialH = inp.sidewall_height === "full" ? 0 : Number(inp.sidewall_height);
+  let sidewallBoth = sidewalls2;          // price for BOTH sides at the chosen wall height
+  if(partialH > 0){
+    const base6 = SIDEWALLS_2[`${inp.L}|6`];
+    if(base6 === undefined) return {ok:false, error:`Partial sidewall price not found`};
+    sidewallBoth = Math.round(base6 / 6 * partialH);
+  }
+  const sidewallsTotal = Math.round(sidewallBoth * (inp.sidewall_qty / 2));
+  const sidewallWallH = partialH > 0 ? partialH : Number(inp.h);
 
   const endwall1 = ENDWALL_1[`${inp.w}|${inp.h}`];
   if(endwall1 === undefined) return {ok:false, error:`Endwall price not found`};
@@ -432,6 +457,7 @@ function calcQuote(){
   acc.door_frames = inp.door_frame_qty * ACCESSORIES.door_frame;
   acc.garage_frames = inp.garage_frame_qty * ACCESSORIES.garage_frame;
   acc.braces = inp.brace_qty * (ACCESSORIES.brace[inp.brace_size] || 0);
+  acc.gables = inp.gable_qty * ACCESSORIES.gable;
 
   // Ground Cert
   const gcBase = (ACCESSORIES.ground_cert[inp.ground_cert_len] || 0);
@@ -450,7 +476,7 @@ function calcQuote(){
     ok:true, ...inp, size,
     base, snowAdder,
     heightAdder,
-    sidewalls2, sidewallsTotal,
+    sidewalls2, sidewallBoth, sidewallsTotal, sidewallWallH,
     endwall1, endwallsTotal,
     accessories: acc,
     accessoriesTotal,
@@ -476,8 +502,9 @@ function render(r){
 
   html += `<div class="sk-row"><span>Height Adder</span><strong>${money(r.heightAdder)}</strong></div>`;
 
-  if(r.sidewall_qty === 2){
-    html += `<div class="sk-row"><span>Sidewalls (Both)</span><strong>${money(r.sidewallsTotal)}</strong></div>`;
+  if(r.sidewall_qty > 0){
+    const sides = r.sidewall_qty === 2 ? "Both Sides" : "One Side";
+    html += `<div class="sk-row"><span>Sidewalls (${sides} • ${r.sidewallWallH}ft × ${r.L}ft)</span><strong>${money(r.sidewallsTotal)}</strong></div>`;
   }
   if(r.endwall_qty > 0){
     html += `<div class="sk-row"><span>Endwalls (${r.endwall_qty})</span><strong>${money(r.endwallsTotal)}</strong></div>`;
@@ -503,6 +530,7 @@ function render(r){
   addRow(`Door Frames (${r.door_frame_qty})`, acc.door_frames);
   addRow(`Garage Frames (${r.garage_frame_qty})`, acc.garage_frames);
   addRow(`Braces (${r.brace_qty})`, acc.braces);
+  addRow(`Gable Ends (${r.gable_qty})`, acc.gables);
 
   if(acc.ground_certification > 0){
     const x2 = r.ground_cert_doubleleg ? " (x2)" : "";
@@ -536,10 +564,11 @@ function syncGroundCertLength(){
 function resetForm(){
   document.getElementById("gauge").value = "14";
   document.getElementById("width_ft").value = "20";
-  document.getElementById("length_ft").value = "35";
-  document.getElementById("height_ft").value = "11";
+  document.getElementById("length_ft").value = "40";
+  document.getElementById("height_ft").value = "12";
   document.getElementById("snow_load").value = "standard";
   document.getElementById("sidewall_qty").value = "0";
+  document.getElementById("sidewall_height").value = "full";
   document.getElementById("endwall_qty").value = "0";
 
   document.getElementById("extra_panel_qty").value = "0";
@@ -630,7 +659,9 @@ function downloadPDF(r){
   doc.setFontSize(10);
   setBlack();
 
-  const sidewallsText = (r.sidewall_qty === 2) ? "Both" : "None";
+  const sidewallsText = r.sidewall_qty > 0
+    ? `${r.sidewall_qty === 2 ? "Both Sides" : "One Side"} - ${r.sidewallWallH}ft x ${r.L}ft`
+    : "None";
   const endwallsText = (r.endwall_qty > 0) ? String(r.endwall_qty) : "None";
   const snowText = (r.snow_load === "60") ? "60 LB" : "Standard";
 
@@ -650,7 +681,7 @@ function downloadPDF(r){
 
   lineItem("Height Adder:", money2(r.heightAdder));
 
-  if(r.sidewallsTotal > 0) lineItem("Sidewalls:", money2(r.sidewallsTotal));
+  if(r.sidewallsTotal > 0) lineItem(`Sidewalls (${r.sidewallWallH}ft x ${r.L}ft):`, money2(r.sidewallsTotal));
   if(r.endwallsTotal > 0) lineItem(`Endwalls (${r.endwall_qty}):`, money2(r.endwallsTotal));
 
   y += 4;
@@ -674,6 +705,7 @@ function downloadPDF(r){
     addAcc("Door Frame Outs", r.door_frame_qty, acc.door_frames || 0);
     addAcc("Garage Frame Outs", r.garage_frame_qty, acc.garage_frames || 0);
     addAcc("Braces", r.brace_qty, acc.braces || 0);
+    addAcc("Gable Ends", r.gable_qty, acc.gables || 0);
 
     if((acc.ground_certification || 0) > 0){
       const x2 = r.ground_cert_doubleleg ? " x2" : "";
@@ -721,6 +753,13 @@ document.getElementById("length_ft").addEventListener("change", ()=>{
   syncGroundCertLength();
   lastResult = calcQuote();
   render(lastResult);
+});
+
+["width_ft","height_ft","sidewall_qty","sidewall_height","endwall_qty","gable_qty"].forEach(id=>{
+  document.getElementById(id).addEventListener("change", ()=>{
+    lastResult = calcQuote();
+    render(lastResult);
+  });
 });
 
 document.getElementById("gauge").addEventListener("change", ()=>{
