@@ -20,4 +20,10 @@ KVM 2 (Hostinger VPS): NOT ACCESSIBLE from this session (no SSH key, no credenti
 | 13 | Field-by-field Kickstarter upload package | DONE | 09_upload_package/ |
 | 14 | Verification pass (numbers, links, consistency) | DONE | 10_registers/VERIFICATION_LOG.md |
 | 15 | START HERE — Advisor Review (+ PDF) | DONE | 00_START_HERE/ |
-| 16 | Save to Drive "Kickstarter Campaign" folder + git push | IN PROGRESS | Drive folder 17m2t7siFFOpZspOm27QzCKw6JIAey6e8 |
+| 16 | Save to Drive "Kickstarter Campaign" folder + git push | DONE (Drive: all .md/.html/.xlsx/.pdf uploaded; graphics PNGs uploaded by helper; 25 MB zip only on GitHub) | https://drive.google.com/drive/folders/17m2t7siFFOpZspOm27QzCKw6JIAey6e8 |
+
+## Resume notes (if a new session picks this up)
+- Completed: everything in the table above. Latest commit on branch `claude/beautiful-einstein-dr2yrc` in `thewildfirewatchdog/skylinerbuildings`.
+- Drive copy: folder "Kickstarter Campaign" inside 02_Wildfire_Watchdog (id 17m2t7siFFOpZspOm27QzCKw6JIAey6e8). Photos are referenced by Drive id in 05_media/photos/DRIVE_SOURCES.md rather than re-uploaded.
+- Not done / blocked: fob control box build + video (owner); hero photos (owner upload); supplier quotes (RFQs drafted, unsent); KVM 2 transfer (no access); Kickstarter draft population (no account access); edited campaign video (footage not transferable; key shots missing).
+- Next action after owner review: answer the 12 decisions in START HERE §5, then re-run `03_financial_model/build_workbook.py` with any changed inputs and `05_media/build_graphics.py`, regenerate PDFs with `00_START_HERE/make_pdf.py`.
