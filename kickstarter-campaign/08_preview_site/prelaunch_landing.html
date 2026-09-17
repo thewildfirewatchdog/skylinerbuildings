@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Dry Lightning Prelaunch</title>
+<meta name="description" content="Draft prelaunch landing page for the Dry Lightning 3000 Kickstarter. Signup form is inactive (test mode) until approved.">
+<style>
+:root{--ink:#1c1c1c;--mute:#5d5d5d;--line:#dcdcdc;--paper:#fff;--field:#f5f5f4;--ember:#e8641b;--ember-d:#c2500f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#f2f2f2;--mute:#b5b5b5;--line:#3a3a3a;--paper:#151515;--field:#222}}
+:root[data-theme="dark"]{--ink:#f2f2f2;--mute:#b5b5b5;--line:#3a3a3a;--paper:#151515;--field:#222}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+.banner{background:var(--ember);color:#fff;padding:8px 16px;font-size:13px;font-weight:700;text-align:center}
+.wrap{max-width:640px;margin:0 auto;padding:24px 16px 80px}
+h1{font-size:clamp(28px,6vw,42px);line-height:1.1;margin:8px 0}
+.sub{font-size:18px;color:var(--mute);margin:0 0 18px}
+img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--line)}
+ul{padding-left:20px}
+form{background:var(--field);padding:16px;border-radius:8px;margin:20px 0}
+label{display:block;font-size:14px;margin:8px 0 4px}
+input[type=text],input[type=email]{width:100%;padding:12px;border:1px solid var(--line);border-radius:6px;font-size:16px;background:var(--paper);color:var(--ink)}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:10px 0}
+button{width:100%;background:var(--ember);color:#fff;border:0;padding:14px;border-radius:6px;font-weight:700;font-size:16px;cursor:pointer}
+button:hover{background:var(--ember-d)}
+.note{font-size:12px;color:var(--mute)}
+.msg{margin-top:10px;font-size:14px;font-weight:700}
+.fine{font-size:12px;color:var(--mute);margin-top:30px}
+</style>
+</head>
+<body>
+<div class="banner">PRIVATE DRAFT — form is in TEST MODE and stores nothing. Not published.</div>
+<div class="wrap">
+<h1>A wildfire water pump you start from your porch.</h1>
+<p class="sub">Dry Lightning 3000 — Honda-powered, key-fob start, throttle and valve. Coming to Kickstarter January 19, 2027. Ten Early Bird units.</p>
+<img src="../05_media/feature_panels.png" alt="Four buttons: crank, run/stop, throttle, valve">
+<ul>
+<li>Start, throttle, open the valve and stop from about 150 ft. No app, no internet.</li>
+<li>Failsafe wiring: lose signal or power and it shuts itself down.</li>
+<li>Built and wet-tested in Bend, Oregon. Lower-48 shipping.</li>
+</ul>
+
+<form id="signup" novalidate>
+<label for="fn">First name</label>
+<input id="fn" name="first_name" type="text" autocomplete="given-name">
+<label for="em">Email</label>
+<input id="em" name="email" type="email" autocomplete="email" required>
+<label for="st">State (optional)</label>
+<input id="st" name="state" type="text" autocomplete="address-level1">
+<div class="chk"><input id="c1" type="checkbox" required><label for="c1">Email me when the Kickstarter opens and up to six emails before then. I can unsubscribe any time.</label></div>
+<button type="submit">Notify me at launch</button>
+<div class="msg" id="msg" aria-live="polite"></div>
+<p class="note">Test mode: submissions are logged to the browser console only. Production wiring options are documented in SIGNUP_WORKFLOW.md (Kickstarter prelaunch "Notify me" button, or a WordPress form → n8n → email list).</p>
+</form>
+
+<p class="fine">Preparedness equipment, not a guarantee. This product does not make property fireproof, guarantee protection, or replace defensible space, firefighters or evacuation orders. It is not a monitoring, alarm or fire-detection device. Wildfire Watchdog LLC, Bend, Oregon.</p>
+</div>
+<script>
+// TEST MODE: no network calls, no storage. Replace the handler per SIGNUP_WORKFLOW.md before any public use.
+document.getElementById('signup').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var em = document.getElementById('em').value.trim();
+  var ok = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em) && document.getElementById('c1').checked;
+  var m = document.getElementById('msg');
+  if (!ok) { m.textContent = 'Please enter a valid email and tick the consent box.'; return; }
+  console.log('[TEST MODE] would submit', { first_name: document.getElementById('fn').value, email: em, state: document.getElementById('st').value, consent: true, ts: new Date().toISOString() });
+  m.textContent = 'Test mode: nothing was sent. In production you would see "Thanks — watch your inbox on January 19."';
+});
+</script>
+</body>
+</html>

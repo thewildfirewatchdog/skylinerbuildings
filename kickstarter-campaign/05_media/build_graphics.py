@@ -58,7 +58,7 @@ def use_of_funds():
     ax.spines["left"].set_color(LINE)
     ax.tick_params(axis="x", bottom=False, labelbottom=False)
     ax.tick_params(axis="y", length=0, labelsize=11, colors=INK)
-    ax.set_title(f"Where a \\$60,000 goal goes (about \\${total:,.0f} modeled, 10-pump minimum batch)", loc="left", fontsize=14, color=INK, weight="bold", pad=14)
+    ax.set_title(f"Where a \\$60,000 goal goes (10-pump minimum batch)", loc="left", fontsize=15, color=INK, weight="bold", pad=14, x=-0.62)
     fig.text(0.01, 0.01, "Estimates from the campaign financial model v1 (2026-09-17). Parts pricing is not yet quoted.", fontsize=9, color=MUTE)
     plt.tight_layout(rect=(0, 0.04, 1, 1))
     fig.savefig(os.path.join(OUT, "use_of_funds.png"), facecolor="white")
