@@ -9,7 +9,7 @@ Basis: RF briefing 2026-09-10 (VERIFIED as the current design intent), product p
 ## 2. What still needs development before delivery
 | Item | Status | Evidence |
 |---|---|---|
-| Production wiring with the Solidremote receivers on the actual pump (the demo video shows the ESP-NOW/dashboard control path, not the fob path) | IN DEVELOPMENT — briefing lists the fob harness as the v1 design; no test log of the fob-driven pump on file | briefing 2026-09-10; NT status 2026-08-29 |
+| Fob control box (Solidremote receivers + relays) built and tested on the actual pump | NOT BUILT — design and parts list only (briefing 2026-09-10); demo video shows the ESP/dashboard path; a 2026-08-02 field fault (starter cranked from battery backfeed) was fixed in the ESP path with an isolation relay and must be designed into the RF box too | briefing 2026-09-10; NT status 2026-08-29 |
 | Spring-return (fail-closed) valve actuator | IN DEVELOPMENT — prototype uses a motorized CR04 valve without spring return | sourcing sheet 2026-07-05; briefing parts list |
 | Failsafe timing test (≤ 2 s) | NOT YET MEASURED | briefing §2 "required failsafe behavior" |
 | Flow / pressure / range measurements | NOT YET MEASURED (product page: "specifications are preliminary") | product page 2026-09-11 |
@@ -35,10 +35,10 @@ Basis: RF briefing 2026-09-10 (VERIFIED as the current design intent), product p
 ## 4. Feature status matrix (public copy must match)
 | Feature | Status | Say in copy |
 |---|---|---|
-| Remote engine start (timed crank) | DEMONSTRATED on prototype (ESP path; fob path designed) | "Demonstrated on the prototype" |
-| Remote stop/kill | DEMONSTRATED | same |
-| Remote throttle idle/full | DEMONSTRATED (ESP throttle receivers exist; fob channel designed) | same |
-| Remote discharge valve | DEMONSTRATED with motorized valve; spring-return is the production part | "Spring-return actuator is the production part" |
+| Remote engine start (timed crank) | DEMONSTRATED on prototype via ESP link (README 2026-08-08 'confirmed working'); fob path DESIGNED, not built | "Demonstrated on the prototype" |
+| Remote stop/kill | DEMONSTRATED via ESP link; fob path designed | "Demonstrated on the prototype (wireless link)" |
+| Remote throttle idle/full | IN DEVELOPMENT (ESP throttle receiver built; polarity test pending per 2026-08-05 wire map; fob channel designed) | "Built in the prototype; final test pending" |
+| Remote discharge valve | IN DEVELOPMENT (motorized valve receiver exists; spring-return actuator not fitted) | "Spring-return actuator is the production part" |
 | Interlock (C/D dead unless RUN) | DESIGNED (wiring spec) | "wired so that…"; measure before launch video |
 | Failsafe on signal/power loss | DESIGNED; ESP version had heartbeat failsafe in firmware | "Design target within 2 s; measured on every unit" |
 | Manual override | DESIGNED (in spec and product page) | "Manual controls remain available" |

@@ -134,7 +134,7 @@ def feature_panels():
               ("D", "Valve", "Opens the 2 in. discharge valve. Spring-closes on stop or power loss.")]
     img = Image.new("RGB", (W, H), "white"); d = ImageDraw.Draw(img)
     d.text((40, 30), "Four buttons. Four independent channels.", font=font(34, True), fill=INK)
-    d.text((40, 78), "Demonstrated on the prototype. No app, no internet, no subscription.", font=font(18), fill=MUTE)
+    d.text((40, 78), "Production design (fob box to be built and filmed before launch). No app, no internet, no subscription.", font=font(18), fill=MUTE)
     for i, (k, t, s) in enumerate(panels):
         x = 40 + i * 240
         d.rounded_rectangle((x, 140, x + 220, 470), radius=14, fill=FIELD, outline=LINE, width=2)
@@ -189,8 +189,8 @@ def cover():
 
 # ---------------------------------------------------------------- 7. Demonstrated vs development panel
 def status_panel():
-    left = ["Fob start, run/stop, throttle, valve", "Failsafe relay interlock", "Manual override switches", "Honda iGX390 + pump end on skid", "Phone/dashboard start (prototype path)"]
-    right = ["Spring-return valve actuator (production part)", "Measured flow, pressure, range", "FCC declaration for the control box", "Insurance bound before shipping", "Phone control for sale (future, not v1)"]
+    left = ["Wireless remote start and stop (prototype ESP link)", "Phone/dashboard start (prototype, 2026-08-23)", "Local toggle start/stop", "Honda iGX390 + pump end on skid, running", "Relay failsafe design and Remote Port spec"]
+    right = ["Build + test the 4-button fob control box on this pump", "Spring-return valve actuator (production part)", "Measured flow, pressure, range, failsafe timing", "FCC declaration for the control box", "Insurance bound before shipping"]
     img = Image.new("RGB", (W, H), "white"); d = ImageDraw.Draw(img)
     d.text((40, 30), "What exists today vs. what this campaign completes", font=font(30, True), fill=INK)
     d.rounded_rectangle((40, 110, 500, 500), radius=14, fill="#EAF3EA", outline=OK, width=2)

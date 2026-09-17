@@ -30,7 +30,7 @@ Prepared for Jeremy Coon and his business advisor from the Wildfire Watchdog Dri
 | Deliverable | File | State |
 |---|---|---|
 | This document (+ PDF) | `00_START_HERE/START_HERE_Advisor_Review.md`, `.pdf` | Complete |
-| Research: technical evidence | `01_research/technical_evidence.md` | See §5 status |
+| Research: technical evidence | `01_research/technical_evidence.md` | Complete (some folders skimmed; noted in file) |
 | Research: costs, insurance, patent, Northern Tool | `01_research/costs_insurance_legal.md` | Complete |
 | Research: founder and history | `01_research/founder_and_history.md` | Complete |
 | Research: Kickstarter rules and competitors | `01_research/kickstarter_rules_and_competitors.md` | Complete (rule text from search extracts; re-verify in editor) |
@@ -74,7 +74,7 @@ Private preview: open `08_preview_site/index.html` from the zip or the Drive fol
 ## 4. Assumptions, evidence gaps, genuine blockers
 
 **Launch blockers (must be cleared before submitting to Kickstarter):**
-1. **Working fob-controlled demonstration on camera.** The demo video on file shows the local toggle and the phone/dashboard path. Kickstarter requires the prototype to perform every advertised function; the fob start/throttle/valve/stop and the failsafe must be filmed on the real unit.
+1. **The fob-controlled control box does not exist yet.** The 2026-09-10 briefing is a design and parts list; what runs today is the prototype's ESP wireless link (remote crank/kill confirmed working, phone/dashboard start bench-proven 2026-08-23) and the local toggle. Kickstarter requires the prototype to perform every advertised function on camera, so the fob box must be built (about $200 in parts, a few days of shop time), tested with the failsafe stopwatch, and filmed before submission. This is the single biggest blocker and the first item on the owner list.
 2. **Measured numbers.** Flow, pressure, range and failsafe timing have never been measured. The copy says "specified" and "measured before shipping"; the video needs at least one real reading.
 3. **Identity, LLC, EIN, bank and Stripe verification** on Kickstarter. Owner only.
 4. **Insurance binding plan.** Not a Kickstarter rule, but no pump should ship uninsured. Quotes exist; nothing is bound; the Kinsale application wording must be corrected to the v1 description.
@@ -106,7 +106,7 @@ Private preview: open `08_preview_site/index.html` from the zip or the Drive fol
 ---
 
 ## 6. Remaining owner-only actions
-1. Film the shot list in `06_video/` (fob sequence, failsafe with stopwatch, wet test with gauge, range test).
+1. Build the fob control box per the 2026-09-10 briefing (include the starter-isolation relay learned from the 2026-08-02 backfeed fault), then film the shot list in `06_video/` (fob sequence, failsafe with stopwatch, wet test with gauge, range test).
 2. Upload the hero photo set (PXL_20260817 series) and the three demo videos into the Drive "Kickstarter Campaign/media" folder.
 3. Confirm or rewrite the founder story in your own words; confirm the background claim or drop it.
 4. Complete Kickstarter identity/bank/Stripe verification; create the project draft and paste from `09_upload_package/`.

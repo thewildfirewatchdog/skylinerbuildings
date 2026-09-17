@@ -44,7 +44,7 @@ I'm Jeremy Coon. I live and work in Bend, Oregon, in the middle of the country's
 
 Every gas fire pump on the market assumes somebody is standing next to it. In a real fire, that somebody has evacuated, is asleep, or does not want to walk toward the embers to pull a rope. I wanted a pump I could start from the truck, the porch, or the end of the driveway, and shut down the same way.
 
-So I designed the control system around a commercial Honda engine: relays that turn the ignition, starter, throttle and a powered discharge valve into four buttons on a rolling-code key fob, wired so that if the remote link or the power ever drops, the engine kills, the throttle returns to idle and the valve closes on its own. I built the prototype, filed two provisional patent applications on the automatic version in January 2026, and by August 2026 had the unit you see in these photos running from the fob and, in the prototype version, from my phone.
+So I designed the control system around a commercial Honda engine: relays that turn the ignition, starter, throttle and a powered discharge valve into four buttons on a rolling-code key fob, wired so that if the remote link or the power ever drops, the engine kills, the throttle returns to idle and the valve closes on its own. I built the prototype, filed two provisional patent applications on the automatic version in January 2026, and by August 2026 had the unit you see in these photos starting and stopping wirelessly from my phone and from a bench switch. The key-fob control box is the production design of that same relay system; building and testing it on this pump is the first job this campaign funds, and it will be on video before launch.
 
 This campaign funds the first production batch of the fob-controlled version, built and tested in Bend.
 
@@ -54,13 +54,15 @@ This campaign funds the first production batch of the fob-controlled version, bu
 - A good portable pump costs a thousand to two thousand dollars and needs a person at the pull-cord, the choke and the valve.
 - Add-on engine remote-start kits exist, but they are start/stop only. They do not run the throttle up, and they do not open a water valve.
 
-### 4. What the Dry Lightning 3000 does (demonstrated on the prototype)
-| Button | What happens | Status |
+### 4. What the Dry Lightning 3000 does
+| Button | What happens | Status (2026-09-17) |
 |---|---|---|
-| A — Crank | Starter engages for a timed pulse | Demonstrated on prototype |
-| B — Run / Stop | Ignition enabled; press again to stop | Demonstrated on prototype |
-| C — Throttle | Idle ↔ full throttle | Demonstrated on prototype |
-| D — Valve | 2 in. discharge valve closed ↔ open | Demonstrated on prototype (motorized valve); spring-return failsafe actuator is the production part |
+| A — Crank | Starter engages for a timed pulse | Remote crank demonstrated on the prototype (wireless ESP link); fob receiver wiring designed, to be built and filmed before launch |
+| B — Run / Stop | Ignition enabled; press again to stop | Remote run/kill demonstrated on the prototype; fob path as above |
+| C — Throttle | Idle ↔ full throttle | Throttle receiver built in the prototype; final polarity test pending; fob path as above |
+| D — Valve | 2 in. discharge valve closed ↔ open | Motorized valve controlled in the prototype; spring-return failsafe actuator is the production part, not yet fitted |
+
+[REVIEW: Kickstarter requires the prototype to perform every advertised function on camera. The fob-controlled build must exist and be filmed before this page is submitted. Until then this section is a development statement, not a demonstration claim.]
 
 Safety interlock: buttons C and D are physically dead unless the engine is enabled to run. Press B to stop and both the throttle and the valve drop to their safe default automatically. Loss of power or remote signal does the same. Manual switches on the pump work with nothing plugged in.
 

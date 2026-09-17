@@ -28,7 +28,7 @@ Kickstarter-specific: no supplier has been asked for a quote yet. The RFQ drafts
 ## 2. Assembly and test sequence (per unit)
 1. Receive and inspect engine, pump end, frame (serial numbers logged in the build sheet).
 2. Mount engine and pump end to frame; torque check; fit suction/discharge fittings and float valve.
-3. Build harness on the bench from the harness drawing: battery → 5A fuse → Remote Port pin 1; relay box K1 (kill), K2 (throttle), K3 (valve); starter via receiver 10A contact; Receiver 2 powered from RUN line (interlock).
+3. Build harness on the bench from the harness drawing: battery → 5A fuse → Remote Port pin 1; relay box K1 (kill), K2 (throttle), K3 (valve); starter via receiver 10A contact with a starter-isolation relay (the 2026-08-02 prototype fault was the starter cranking from battery backfeed); Receiver 2 powered from RUN line (interlock).
 4. Bench-test relay logic with a test fob before installing on the pump: crank pulse, run toggle, throttle toggle, valve toggle; confirm C and D are dead when RUN is off.
 5. Failsafe timing test: with engine running, remove RUN signal; record time to ignition kill, throttle to idle, valve closed (must be ≤ 2 s per design spec).
 6. Manual override test with nothing plugged into the Remote Port.
