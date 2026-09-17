@@ -50,7 +50,8 @@ Prepared for Jeremy Coon and his business advisor from the Wildfire Watchdog Dri
 | Prelaunch landing page + signup workflow (test mode) | `08_preview_site/prelaunch_landing.html`, `SIGNUP_WORKFLOW.md` | Complete, inactive |
 | Kickstarter field-by-field upload package | `09_upload_package/KICKSTARTER_UPLOAD_PACKAGE.md` | Complete; no draft populated (no account access) |
 | Source/assumption register, decision log, change log, task register, verification log | `10_registers/` | Complete |
-| Downloadable package | `WW_Kickstarter_Campaign_v1.zip` (Drive + GitHub) | Complete |
+| Downloadable package | `WW_Kickstarter_Campaign_v1.zip` (GitHub only; 25 MB) | Complete |
+| Drive copy | Folder "Kickstarter Campaign" in 02_Wildfire_Watchdog: all documents, workbook, preview pages, START HERE PDF. Graphics PNGs, the combined review PDF and the zip are on GitHub only (connector could not carry binaries reliably); see the README in the Drive folder | Partial by design |
 
 Private preview: open `08_preview_site/index.html` from the zip or the Drive folder in any browser (works offline; phone-width tested, no horizontal scroll).
 
