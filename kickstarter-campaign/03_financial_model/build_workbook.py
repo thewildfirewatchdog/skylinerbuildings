@@ -107,10 +107,10 @@ MIN_BATCH = inp(ws, r, "Minimum production batch the goal must fund (units)", 10
 section("C. Reward prices and shipping (PROPOSED) — see Rewards sheet for inclusions")
 P_SUPPORT = inp(ws, r, "Tier 1 — Supporter (decal + backer wall) price", 35, MONEY, "PROPOSED", "Low tier for friends/family/community; keeps backer count and social proof up", name="p_support"); r += 1
 P_FOBKIT = inp(ws, r, "Tier 2 — Remote Control Kit (retrofit for Honda iGX390 electric-start pumps) price", 1250, MONEY, "PROPOSED", "Harness + 2 rolling-code receivers + fob + relay/valve box; only for owners of a compatible pump (see compatibility note on Rewards)", 995, 1495, name="p_fobkit"); r += 1
-P_EARLY = inp(ws, r, "Tier 3 — DL3000 Early Bird price", 4950, MONEY, "PROPOSED", "10% below $5,500 target MSRP; rewards first movers without undercutting Northern Tool MAP long term", 4750, 5100, name="p_early"); r += 1
-P_STD = inp(ws, r, "Tier 4 — DL3000 Kickstarter price", 5250, MONEY, "PROPOSED", "~4.5% below target MSRP $5,500", 5100, 5500, name="p_std"); r += 1
-P_HOSE = inp(ws, r, "Tier 5 — DL3000 + Hose & Nozzle Package price", 5900, MONEY, "PROPOSED", "Pump + 2 in. discharge hose (50 ft), adjustable nozzle, suction hose, strainer, spare fob", 5750, 6100, name="p_hose"); r += 1
-SHIP_PUMP = inp(ws, r, "Shipping charged to backer per pump (US contiguous, LTL freight to residential w/ liftgate)", 349, MONEY, "ESTIMATE", "Palletized ~180 lb crate; LTL residential+liftgate quotes typically $250–$450 from Bend OR", 250, 450, name="ship_pump"); r += 1
+P_EARLY = inp(ws, r, "Tier 3 — DL3000 Early Bird price", 4699, MONEY, "PROPOSED", "6% below the $4,999 MAP proposed on the Northern Tool quote sheet (2026-09-12 packet); rewards first movers; limited to 10", 4499, 4999, name="p_early"); r += 1
+P_STD = inp(ws, r, "Tier 4 — DL3000 Kickstarter price", 4999, MONEY, "PROPOSED", "Equal to the $4,999 MAP proposed to Northern Tool, so the campaign never undercuts a future retail partner", 4799, 5499, name="p_std"); r += 1
+P_HOSE = inp(ws, r, "Tier 5 — DL3000 + Hose & Nozzle Package price", 5599, MONEY, "PROPOSED", "Kickstarter price + $600 package: 2 in. discharge hose (50 ft), adjustable nozzle, suction hose, strainer, spare fob", 5399, 5899, name="p_hose"); r += 1
+SHIP_PUMP = inp(ws, r, "Shipping charged to backer per pump (US contiguous, LTL freight to residential w/ liftgate)", 349, MONEY, "ESTIMATE", "Packed 40×28×24 in, 165 lb per Northern Tool quote sheet (2026-09-12); LTL residential + liftgate from Bend OR typically $250–$450; get 2 carrier quotes", 250, 450, name="ship_pump"); r += 1
 SHIP_KIT = inp(ws, r, "Shipping charged per Remote Control Kit (UPS Ground)", 25, MONEY, "ESTIMATE", "~8 lb box", 18, 35, name="ship_kit"); r += 1
 SHIP_SUP = inp(ws, r, "Shipping charged per Supporter tier (USPS)", 0, MONEY, "PROPOSED", "Decal mailed first-class; cost absorbed", name="ship_sup"); r += 1
 
@@ -137,7 +137,7 @@ VOL_DISC = inp(ws, r, "Modeled parts discount at 20+ units (%)", 0.08, PCT, "EST
 COST_OVER = inp(ws, r, "Conservative scenario cost overrun (%)", 0.15, PCT, "ESTIMATE", "Stress factor applied to all parts + labor", 0.10, 0.30, name="cost_over"); r += 1
 
 section("F. One-time campaign and production costs (before or during fulfillment)")
-O_INSUR = inp(ws, r, "Product/general liability insurance, year 1", 4598, MONEY, "VERIFIED", "Kinsale GL quote 2026-09-01 #07520376: $4,597.91 paid in full ($1M/$2M). Not yet bound. Alternative StarStone quote $10,598 ($2M/$4M)", 4598, 10598, name="o_insur"); r += 1
+O_INSUR = inp(ws, r, "Product/general liability insurance, year 1", 10598, MONEY, "VERIFIED (quote)", "StarStone via RPS: $10,598.05, $2M/$4M occurrence (the limits Northern Tool requires; business plan 2026-09-15 budgets this). Alternative Kinsale quote 2026-09-01 #07520376: $4,597.91 ($1M/$2M claims-made). Neither bound.", 4598, 10598, name="o_insur"); r += 1
 O_FCC = inp(ws, r, "FCC Supplier's Declaration of Conformity (host device with pre-certified modules)", 2500, MONEY, "ESTIMATE", "Briefing 2026-09-10: SDoC path ~$1K–$5K", 1000, 5000, name="o_fcc"); r += 1
 O_TEST = inp(ws, r, "Engineering validation: flow/pressure test with calibrated gauge & flow meter, failsafe timing test, 3rd-party review of harness", 1500, MONEY, "ESTIMATE", "Flow meter + gauges ~$400, test fixture, 1 day outside review", 800, 3000, name="o_test"); r += 1
 O_TOOL = inp(ws, r, "Assembly fixtures, crimp tools, crate template, labels design", 1200, MONEY, "ESTIMATE", "Business plan: $5,000 for storage/jigs/QC tools at 50 units; scaled to 10–20", 800, 2500, name="o_tool"); r += 1
@@ -441,7 +441,7 @@ cases = [
     ("Parts + labor cost +30%", f"={base_surp}-Scenarios!C{R_PUMPCOST}*0.30-Scenarios!C{R_HOSECOST}*0.30-Scenarios!C{R_KITCOST}*0.30", "Serious sourcing failure; still positive? check"),
     ("Freight +$150 per pump", f"={base_surp}-Scenarios!C{R_PUMPS}*150", "Residential LTL surcharges"),
     ("Dropped pledges 8% instead of 3%", f"={base_surp}-Scenarios!C{R_GROSS}*0.05*(1-ks_fee-pp_fee)", "Card failures on $5k pledges"),
-    ("StarStone insurance ($10,598) instead of Kinsale", f"={base_surp}-(10598-o_insur)", "If $2M/$4M limits are required by a retailer"),
+    ("Kinsale insurance ($4,598) instead of StarStone", f"={base_surp}+(o_insur-4598)", "If $1M/$2M claims-made is accepted for a direct-sales-only year"),
     ("3-month delay (extra software/support + storage $600/mo)", f"={base_surp}-1800", "Backer goodwill cost not modeled; update cadence matters more"),
     ("Only Early Birds sell (10 pumps, no T4/T5, no kits)", f"=10*Rewards!J4+Inputs!B{mix_rows['supporters']}*Rewards!J2-Scenarios!C{R_ONE}-Scenarios!C{R_ADS}-(10*(unit_cost_base+cost_ship_pump)+Scenarios!C{R_ONE})*contingency", "Worst funded mix"),
     ("Combined: cost +15% AND freight +$150 AND drops 8%", f"={base_surp}-Scenarios!C{R_PUMPCOST}*0.15-Scenarios!C{R_HOSECOST}*0.15-Scenarios!C{R_KITCOST}*0.15-Scenarios!C{R_PUMPS}*150-Scenarios!C{R_GROSS}*0.05*(1-ks_fee-pp_fee)", "Compound bad year"),
