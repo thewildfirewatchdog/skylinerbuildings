@@ -61,7 +61,7 @@
         <div class="sk-field">
           <label>Length (ft)</label>
           <select id="length_ft">
-            <option>20</option><option>25</option><option>30</option><option selected>35</option><option>40</option><option>45</option><option>50</option>
+            <option>20</option><option>25</option><option>30</option><option selected>35</option><option>40</option><option>45</option><option>50</option><option>60</option>
           </select>
         </div>
 
@@ -341,6 +341,12 @@ const ACCESSORIES = {
   ground_cert: {21:595, 26:695, 31:695, 36:795, 41:895, 46:995, 51:1195}
 };
 
+/* ===== LONG BUILDINGS =====
+   A 60' building is two 30' buildings joined end to end:
+   base, height adder and sidewalls are the 30' price x2.
+*/
+const LENGTH_DOUBLE = { "60": "30" };
+
 /* ===== SNOW LOAD ADDER ===== */
 const SNOW_LOAD_ADD = {
   standard: 0,
@@ -409,16 +415,23 @@ function calcQuote(){
   const inp = getInputs();
   const size = `${inp.w}x${inp.L}`;
 
-  const base = getBasePrice(size, inp.gauge);
-  if(base === null) return {ok:false, error:`Base price not found for ${size}`};
+  // 60' = two 30' buildings: price the 30' section and double it
+  const priceL = LENGTH_DOUBLE[inp.L] || inp.L;
+  const mult = LENGTH_DOUBLE[inp.L] ? 2 : 1;
+
+  const base1 = getBasePrice(`${inp.w}x${priceL}`, inp.gauge);
+  if(base1 === null) return {ok:false, error:`Base price not found for ${size}`};
+  const base = base1 * mult;
 
   const snowAdder = (SNOW_LOAD_ADD[inp.snow_load] ?? 0);
 
-  const heightAdder = HEIGHT_ADD[`${inp.L}|${inp.h}`];
-  if(heightAdder === undefined) return {ok:false, error:`Height adder not found`};
+  const heightAdder1 = HEIGHT_ADD[`${priceL}|${inp.h}`];
+  if(heightAdder1 === undefined) return {ok:false, error:`Height adder not found`};
+  const heightAdder = heightAdder1 * mult;
 
-  const sidewalls2 = SIDEWALLS_2[`${inp.L}|${inp.h}`];
-  if(sidewalls2 === undefined) return {ok:false, error:`Sidewall price not found`};
+  const sidewalls1 = SIDEWALLS_2[`${priceL}|${inp.h}`];
+  if(sidewalls1 === undefined) return {ok:false, error:`Sidewall price not found`};
+  const sidewalls2 = sidewalls1 * mult;
   const sidewallsTotal = inp.sidewall_qty === 2 ? sidewalls2 : 0;
 
   const endwall1 = ENDWALL_1[`${inp.w}|${inp.h}`];
@@ -471,7 +484,7 @@ function render(r){
 
   let html = `
     <div class="sk-row"><span>Building</span><strong>${r.size} × ${r.h}ft • ${r.gauge}G</strong></div>
-    <div class="sk-row"><span>Base (Roof+Frame)</span><strong>${money(r.base)}</strong></div>
+    <div class="sk-row"><span>Base (Roof+Frame)${r.L === "60" ? " — 2 × 30'" : ""}</span><strong>${money(r.base)}</strong></div>
   `;
 
   if((r.snowAdder || 0) > 0){
