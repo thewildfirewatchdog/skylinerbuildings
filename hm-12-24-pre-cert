@@ -363,7 +363,7 @@ const SNOW_LOAD_ADD = {
 
 /* ===== PDF SETTINGS ===== */
 const PDF_TITLE    = "HM A-FRAME ROOF - Estimate";
-const DISCOUNT_PCT = 10;
+const DISCOUNT_PCT = 0;   // no sale discount (set e.g. 10 to show a sale line)
 const DEPOSIT_PCT  = 10;
 
 function money(n){
@@ -718,13 +718,15 @@ function downloadPDF(r){
   y += 6;
   hr(y); y += 10;
 
-  lineItem("SUBTOTAL:", money2(subtotal), { bold:true });
-  lineItem(`HOLIDAY SALE (${DISCOUNT_PCT}% OFF):`, money2(-discount), { green:true });
-
-  y += 2;
-  hr(y); y += 10;
-
-  lineItem("TOTAL AFTER SALE:", money2(totalAfterSale), { bold:true });
+  if(DISCOUNT_PCT > 0){
+    lineItem("SUBTOTAL:", money2(subtotal), { bold:true });
+    lineItem(`SALE (${DISCOUNT_PCT}% OFF):`, money2(-discount), { green:true });
+    y += 2;
+    hr(y); y += 10;
+    lineItem("TOTAL AFTER SALE:", money2(totalAfterSale), { bold:true });
+  } else {
+    lineItem("TOTAL:", money2(totalAfterSale), { bold:true });
+  }
   lineItem(`DEPOSIT (${DEPOSIT_PCT}%):`, money2(-deposit), { green:true });
 
   y += 2;
