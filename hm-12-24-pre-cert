@@ -220,6 +220,14 @@
           </div>
 
           <div class="sk-field">
+            <label>Roof Extension 5ft ($500)</label>
+            <select id="roof_ext_qty">
+              <option value="0" selected>0</option>
+              <option value="1">1</option><option value="2">2</option>
+            </select>
+          </div>
+
+          <div class="sk-field">
             <label>Extra Bows (qty)</label>
             <select id="bow_qty">
               <option value="0" selected>0</option>
@@ -334,6 +342,7 @@ const ACCESSORIES = {
   garage_frame: 300,
   brace: {2:10, 3:15, 4:20},
   gable: 250,
+  roof_ext: 500,
   mobile_anchor: {installed:35, not_installed:30},
   concrete_bolt: 10,
   ground_cert: {21:595, 26:695, 31:695, 36:795, 41:895, 46:995, 51:1195}
@@ -384,6 +393,7 @@ function getInputs(){
     brace_qty: Number(document.getElementById("brace_qty").value),
     brace_size: Number(document.getElementById("brace_size").value),
     gable_qty: Number(document.getElementById("gable_qty").value),
+    roof_ext_qty: Number(document.getElementById("roof_ext_qty").value),
     bow_qty: Number(document.getElementById("bow_qty").value),
 
     ground_cert_qty: Number(document.getElementById("ground_cert_qty").value),
@@ -434,6 +444,7 @@ function calcQuote(){
   acc.garage_frames = inp.garage_frame_qty * ACCESSORIES.garage_frame;
   acc.braces = inp.brace_qty * (ACCESSORIES.brace[inp.brace_size] || 0);
   acc.gables = inp.gable_qty * ACCESSORIES.gable;
+  acc.roof_ext = inp.roof_ext_qty * ACCESSORIES.roof_ext;
 
   // Ground Cert
   const gcBase = (ACCESSORIES.ground_cert[inp.ground_cert_len] || 0);
@@ -506,6 +517,7 @@ function render(r){
   addRow(`Garage Frames (${r.garage_frame_qty})`, acc.garage_frames);
   addRow(`Braces (${r.brace_qty})`, acc.braces);
   addRow(`Gable Ends (${r.gable_qty})`, acc.gables);
+  addRow(`Roof Extension 5ft (${r.roof_ext_qty})`, acc.roof_ext);
 
   if(acc.ground_certification > 0){
     const x2 = r.ground_cert_doubleleg ? " (x2)" : "";
@@ -555,6 +567,7 @@ function resetForm(){
   document.getElementById("garage_frame_qty").value = "0";
   document.getElementById("brace_qty").value = "0";
   document.getElementById("gable_qty").value = "0";
+  document.getElementById("roof_ext_qty").value = "0";
   document.getElementById("bow_qty").value = "0";
 
   document.getElementById("ground_cert_qty").value = "0";
@@ -678,6 +691,7 @@ function downloadPDF(r){
     addAcc("Garage Frame Outs", r.garage_frame_qty, acc.garage_frames || 0);
     addAcc("Braces", r.brace_qty, acc.braces || 0);
     addAcc("Gable Ends", r.gable_qty, acc.gables || 0);
+    addAcc("Roof Extension 5ft", r.roof_ext_qty, acc.roof_ext || 0);
 
     if((acc.ground_certification || 0) > 0){
       const x2 = r.ground_cert_doubleleg ? " x2" : "";
