@@ -212,7 +212,7 @@
           </div>
 
           <div class="sk-field">
-            <label>Gable Ends (qty)</label>
+            <label>Gable Ends (qty) $250 ea</label>
             <select id="gable_qty">
               <option value="0" selected>0</option>
               <option value="1">1</option><option value="2">2</option>
@@ -333,6 +333,7 @@ const ACCESSORIES = {
   door_frame: 160,
   garage_frame: 300,
   brace: {2:10, 3:15, 4:20},
+  gable: 250,
   mobile_anchor: {installed:35, not_installed:30},
   concrete_bolt: 10,
   ground_cert: {21:595, 26:695, 31:695, 36:795, 41:895, 46:995, 51:1195}
@@ -432,6 +433,7 @@ function calcQuote(){
   acc.door_frames = inp.door_frame_qty * ACCESSORIES.door_frame;
   acc.garage_frames = inp.garage_frame_qty * ACCESSORIES.garage_frame;
   acc.braces = inp.brace_qty * (ACCESSORIES.brace[inp.brace_size] || 0);
+  acc.gables = inp.gable_qty * ACCESSORIES.gable;
 
   // Ground Cert
   const gcBase = (ACCESSORIES.ground_cert[inp.ground_cert_len] || 0);
@@ -503,6 +505,7 @@ function render(r){
   addRow(`Door Frames (${r.door_frame_qty})`, acc.door_frames);
   addRow(`Garage Frames (${r.garage_frame_qty})`, acc.garage_frames);
   addRow(`Braces (${r.brace_qty})`, acc.braces);
+  addRow(`Gable Ends (${r.gable_qty})`, acc.gables);
 
   if(acc.ground_certification > 0){
     const x2 = r.ground_cert_doubleleg ? " (x2)" : "";
@@ -674,6 +677,7 @@ function downloadPDF(r){
     addAcc("Door Frame Outs", r.door_frame_qty, acc.door_frames || 0);
     addAcc("Garage Frame Outs", r.garage_frame_qty, acc.garage_frames || 0);
     addAcc("Braces", r.brace_qty, acc.braces || 0);
+    addAcc("Gable Ends", r.gable_qty, acc.gables || 0);
 
     if((acc.ground_certification || 0) > 0){
       const x2 = r.ground_cert_doubleleg ? " x2" : "";
