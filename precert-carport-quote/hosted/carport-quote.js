@@ -85,24 +85,6 @@
     { value: "asphalt", label: "Asphalt", sub: "Driveway or lot" },
     { value: "unsure", label: "Not sure yet", sub: "We'll help you decide" }
   ];
-  var USES = [
-    { value: "vehicles", label: "Cars and trucks", sub: "Daily drivers" },
-    { value: "rv", label: "RV or camper", sub: "Motorhome, 5th wheel" },
-    { value: "boat", label: "Boat", sub: "Boat and trailer" },
-    { value: "equipment", label: "Tractor or equipment", sub: "Farm and ranch" },
-    { value: "workshop", label: "Workshop or storage", sub: "Tools, hobbies, hay" },
-    { value: "other", label: "Something else", sub: "" }
-  ];
-  var USE_HEIGHTS = { vehicles: [7, 8], rv: [12, 14], boat: [9, 11], equipment: [10, 12], workshop: [8, 10] };
-  var USE_TIPS = {
-    vehicles: "Tip: a 20' wide building fits two cars side by side. Pick 25' or longer for full-size trucks.",
-    rv: "Tip: measure your RV bumper to bumper and add a few feet. Most RVs need 12' to 14' legs for clearance.",
-    boat: "Tip: measure the boat, trailer tongue, and motor, then add a few feet of walking room.",
-    equipment: "Tip: measure your widest implement and leave room to walk around it.",
-    workshop: "Tip: 22' and 24' wide buildings leave room for a workbench along the wall."
-  };
-  var WIDTH_SUB = { 12: "1 vehicle", 18: "1 to 2 vehicles", 20: "2 vehicles", 22: "2 vehicles + room", 24: "2 to 3 vehicles" };
-  var LENGTH_SUB = { 20: "Cars", 25: "Full-size trucks", 30: "Long trucks, small boats", 35: "Boats, small RVs", 40: "RVs", 45: "Large RVs", 50: "Large RVs, equipment" };
   var TIMEFRAMES = ["As soon as possible", "Within 1 to 3 months", "3 to 6 months", "Just researching"];
   var CONTACT_PREFS = ["Call", "Text", "Email"];
   var NUMERIC = { width: 1, length: 1, height: 1, sidewalls: 1, endwalls: 1, clearPanelLen: 1, extraPanelLen: 1 };
@@ -392,7 +374,6 @@
   function checkSite(s) {
     if (!/^\d{5}$/.test(s.zip)) return "Please enter your 5-digit ZIP code.";
     if (!s.surface) return "Please tell us what the building will sit on.";
-    if (!s.use) return "Please tell us what you'll use it for.";
     return "";
   }
   function checkOpenings(s) {
@@ -415,26 +396,21 @@
   function stepSite() {
     return '<div class="skq-q"><label class="skq-label" for="skq-zip">Installation ZIP code</label>' +
       '<input id="skq-zip" class="skq-input skq-in-sm" type="text" inputmode="numeric" autocomplete="postal-code" placeholder="12345" data-key="zip" value="' + esc(S.zip) + '"></div>' +
-      '<div class="skq-q"><div class="skq-label">What will the building sit on?</div>' + choice("surface", SURFACES, S.surface, "", "Install surface") + "</div>" +
-      '<div class="skq-q"><div class="skq-label">What will you mostly use it for?</div>' + choice("use", USES, S.use, "", "Main use") + "</div>";
+      '<div class="skq-q"><div class="skq-label">What will the building sit on?</div>' + choice("surface", SURFACES, S.surface, "", "Install surface") + "</div>" ;
   }
   function stepSize() {
     var L = S.length || PRICES.lengths[0], wref = S.width || PRICES.widths[0];
-    var wOpts = PRICES.widths.map(function (w) { return { value: w, label: w + "' wide", sub: WIDTH_SUB[w] || "", price: (S.length ? "" : "from ") + money(PRICES.base14[w + "x" + L]) }; });
-    var lOpts = PRICES.lengths.map(function (l) { return { value: l, label: l + "' long", sub: LENGTH_SUB[l] || "", price: (S.width ? "" : "from ") + money(PRICES.base14[wref + "x" + l]) }; });
-    return (USE_TIPS[S.use] ? note(esc(USE_TIPS[S.use])) : "") +
-      '<div class="skq-q"><div class="skq-label">Width</div>' + choice("width", wOpts, S.width, "", "Width") + "</div>" +
+    var wOpts = PRICES.widths.map(function (w) { return { value: w, label: w + "' wide", sub: "", price: (S.length ? "" : "from ") + money(PRICES.base14[w + "x" + L]) }; });
+    var lOpts = PRICES.lengths.map(function (l) { return { value: l, label: l + "' long", sub: "", price: (S.width ? "" : "from ") + money(PRICES.base14[wref + "x" + l]) }; });
+    return '<div class="skq-q"><div class="skq-label">Width</div>' + choice("width", wOpts, S.width, "", "Width") + "</div>" +
       '<div class="skq-q"><div class="skq-label">Length</div>' + choice("length", lOpts, S.length, "", "Length") + "</div>";
   }
   function stepHeight() {
-    var rec = USE_HEIGHTS[S.use] || null;
     var opts = PRICES.heights.map(function (h) {
       var d = delta({ height: h }, { height: PRICES.heights[0] });
-      var isRec = rec ? (h >= rec[0] ? h <= rec[1] : false) : false;
-      return { value: h, label: h + "' legs", sub: "", price: plus(d), badge: isRec ? "Suggested" : "" };
+      return { value: h, label: h + "' legs", sub: "", price: plus(d) };
     });
     return '<div class="skq-mpv">' + buildingSVG(S, { height: 160 }) + "</div>" +
-      (rec ? note("For <b>" + esc(label(USES, S.use).toLowerCase()) + "</b>, most customers choose <b>" + rec[0] + "' to " + rec[1] + "'</b> legs. Prices shown include any walls you add later at the same height.") : "") +
       '<div class="skq-q">' + choice("height", opts, S.height, "skq-c-sm", "Leg height") + "</div>" +
       (hasWalls(S) ? note("Your wall prices are included in the height prices above.") : "");
   }
@@ -705,7 +681,7 @@
     var payload = {
       source: "precert-carport-wizard", quoteId: S.quoteId, date: S.quoteDate, page: window.location.href,
       name: S.name, phone: S.phone, email: S.email, zip: S.zip, contactPref: S.contactPref, timeframe: S.timeframe, notes: S.notes,
-      use: label(USES, S.use), surface: label(SURFACES, S.surface),
+      surface: label(SURFACES, S.surface),
       specs: specList(S).map(function (it) { return it[0] + ": " + it[1]; }).join("; "),
       lines: q.lines.map(function (l) { return { item: l.label, qty: l.qty, amount: l.amount }; }),
       subtotal: q.subtotal, sale: q.sale, total: q.total, deposit: q.deposit, dueAtInstall: q.due,

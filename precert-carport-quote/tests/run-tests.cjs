@@ -123,7 +123,6 @@ async function walkthrough(browser, viewport, tag, hosted) {
   await page.fill("#skq-zip", "76a102");
   check((await page.inputValue("#skq-zip")) === "76102", "ZIP field strips letters");
   await page.click('[data-key="surface"][data-val="gravel"]');
-  await page.click('[data-key="use"][data-val="rv"]');
   await page.screenshot({ path: path.join(SHOTS, `${tag}-02-site.png`) });
   await page.click('[data-act="next"]');
   // Size
@@ -132,7 +131,7 @@ async function walkthrough(browser, viewport, tag, hosted) {
   await page.screenshot({ path: path.join(SHOTS, `${tag}-03-size.png`) });
   await page.click('[data-act="next"]');
   // Height
-  check(await page.isVisible('.skq-badge'), "suggested leg heights shown for RV use");
+  check(!(await page.$('[data-key="use"]')), "no 'what will you use it for' question");
   await page.click('[data-key="height"][data-val="12"]');
   await page.screenshot({ path: path.join(SHOTS, `${tag}-04-height.png`) });
   await page.click('[data-act="next"]');

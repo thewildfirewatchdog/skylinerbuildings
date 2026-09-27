@@ -86,9 +86,9 @@ Everything is in **section 2, PRICE BOOK**. Each table is labeled. For example, 
 
 ## What the customer goes through
 
-1. **Location:** ZIP code, what it sits on (dirt, gravel, concrete, asphalt), and what they'll use it for
+1. **Location:** ZIP code and what it sits on (dirt, gravel, concrete, asphalt)
 2. **Size:** width and length, with prices on every option
-3. **Height:** leg height, with suggested heights for their use (RV, boat, and so on)
+3. **Height:** leg height, with the price of each option
 4. **Strength:** 14-gauge or 12-gauge, and standard or 60 lb snow load
 5. **Walls:** open, sides, ends, or fully enclosed, with a live building picture
 6. **Doors and windows:** roll-up doors, walk-in doors, windows, and framed openings. Only shown if they picked walls. Doors too tall for the legs are blocked.
