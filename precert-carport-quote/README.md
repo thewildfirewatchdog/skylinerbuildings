@@ -6,7 +6,19 @@ A step-by-step questionnaire that gives customers an instant, itemized price for
 
 ---
 
-## Put it on your site (Divi)
+## Recommended: host the file, paste a tiny snippet into Divi
+
+The full wizard is too big for the Divi Code module, so it lives in one file on your server and Divi loads it.
+
+1. **Upload `hosted/carport-quote.js` to your server** in a folder named `carport-quote`, inside your website's main folder.
+   - WordPress on your Hostinger KVM 2 VPS: use SFTP (FileZilla) or your panel's file manager. The main folder is the one that holds `wp-config.php`, often `/var/www/html` or `/home/USER/htdocs/yourdomain.com`.
+   - Check it worked: `https://YOUR-WEBSITE.com/carport-quote/carport-quote.js` should show a page of code in your browser.
+2. **Paste `hosted/divi-snippet.html` into the Divi Code module.** Change `YOUR-WEBSITE.com` to your real domain, and fill in `phone`, `email`, and `leadWebhookUrl`.
+3. After changing prices, run `python3 precert-carport-quote/build-hosted.py` and upload the new `carport-quote.js`. Visitors may need a hard refresh to see the change.
+
+**No server access?** Install the free **WPCode** plugin, create an "HTML Snippet" containing the full `skyliner-precert-carport-quote.html` file, and put its shortcode (for example `[wpcode id="123"]`) in a Divi **Text** module.
+
+## Alternative: paste the whole file (only if your Code module accepts it)
 
 1. Open your page in the Divi Builder.
 2. Add a **Code** module where you want the "Get My Carport Price" box to show.

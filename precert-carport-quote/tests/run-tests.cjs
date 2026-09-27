@@ -16,7 +16,10 @@ const SHOTS = path.join(__dirname, "screenshots");
 fs.mkdirSync(SHOTS, { recursive: true });
 
 // A page that imitates a Divi layout with theme styles that often break embedded widgets.
-const DIVI_PAGE = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+const HOSTED_JS = path.join(ROOT, "precert-carport-quote", "hosted", "carport-quote.js");
+const SNIPPET = fs.readFileSync(path.join(ROOT, "precert-carport-quote", "hosted", "divi-snippet.html"), "utf8")
+  .replace('phone: ""', 'phone: "(555) 000-1111"').replace(/src="[^"]+"/, 'src="https://example-site.test/carport-quote/carport-quote.js"');
+const diviPage = (EMBED) => `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 body{font-family:Georgia,serif;margin:0;background:#f3f3f3}
 #main-header{position:fixed;top:0;left:0;right:0;height:70px;background:#222;z-index:99999}
@@ -29,7 +32,7 @@ ul li{list-style:square}
 <header id="main-header"></header>
 <div id="page-container"><div class="et_pb_section"><div class="et_pb_row">
 <p>Other page content above the calculator.</p>
-<div class="et_pb_module et_pb_code"><div class="et_pb_code_inner">${WIZARD}</div></div>
+<div class="et_pb_module et_pb_code"><div class="et_pb_code_inner">${EMBED}</div></div>
 <p><a class="et_pb_button" href="#carport-quote">Divi button that opens the wizard</a></p>
 </div></div></div></body></html>`;
 
@@ -94,7 +97,7 @@ async function priceParity(browser) {
   await oldPage.close(); await newPage.close();
 }
 
-async function walkthrough(browser, viewport, tag) {
+async function walkthrough(browser, viewport, tag, hosted) {
   console.log(`\n[2] Questionnaire walk-through (${tag})`);
   const ctx = await browser.newContext({ viewport, acceptDownloads: true });
   const page = await ctx.newPage();
@@ -102,7 +105,8 @@ async function walkthrough(browser, viewport, tag) {
   page.on("pageerror", e => errors.push(e.message));
   page.on("console", m => { if (m.type() === "error") errors.push(m.text()); });
   if (jsPdfPath) await page.route("**/jspdf.umd.min.js", r => r.fulfill({ path: jsPdfPath, contentType: "application/javascript" }));
-  await page.setContent(DIVI_PAGE, { waitUntil: "load" });
+  if (hosted) await page.route("https://example-site.test/**", r => r.fulfill({ path: HOSTED_JS, contentType: "application/javascript" }));
+  await page.setContent(diviPage(hosted ? SNIPPET : WIZARD), { waitUntil: "load" });
   await page.screenshot({ path: path.join(SHOTS, `${tag}-00-launcher.png`), fullPage: true });
 
   await page.click(".skq-embed [data-skq-open]");
@@ -190,6 +194,7 @@ async function walkthrough(browser, viewport, tag) {
   check(shown.trim() === "$" + expected.total.toLocaleString("en-US"), "quote page shows sale price " + shown.trim());
   check((await page.textContent(".skq-content")).includes("Gable end"), "unpriced gable end listed as 'priced by our team'");
   check(expected.tbd.length === 1, "one TBD item");
+  if (hosted) check(await page.isVisible('.skq-content a[href^="tel:"]'), "settings typed in the Divi snippet (phone) are used");
   await page.screenshot({ path: path.join(SHOTS, `${tag}-10-quote.png`) });
   await page.screenshot({ path: path.join(SHOTS, `${tag}-10-quote-full.png`), fullPage: true });
 
@@ -249,6 +254,7 @@ async function inlineMode(browser) {
     await priceParity(browser);
     await walkthrough(browser, { width: 1366, height: 860 }, "desktop");
     await walkthrough(browser, { width: 390, height: 844 }, "mobile");
+    await walkthrough(browser, { width: 1366, height: 860 }, "hosted", true);
     await inlineMode(browser);
   } finally { await browser.close(); }
   console.log(failures ? `\n${failures} FAILED` : "\nALL TESTS PASSED");
