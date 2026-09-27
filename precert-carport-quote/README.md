@@ -1,0 +1,100 @@
+# Pre-Certified Carport Price Wizard
+
+A step-by-step questionnaire that gives customers an instant, itemized price for a **pre-certified** metal carport or garage. It's built to paste into a **Divi Code module**.
+
+**The file you need:** `skyliner-precert-carport-quote.html`
+
+---
+
+## Put it on your site (Divi)
+
+1. Open your page in the Divi Builder.
+2. Add a **Code** module where you want the "Get My Carport Price" box to show.
+3. Open `skyliner-precert-carport-quote.html`, copy **everything**, and paste it into the Code module.
+4. Save and exit the builder, then view the live page. The Visual Builder preview can look different from the live page.
+
+### Extra buttons anywhere on the page
+Add a normal Divi **Button** module and set its **Button Link URL** to:
+
+```
+#carport-quote
+```
+
+Clicking it opens the price wizard. The same link works in menus, and a shared link like `yoursite.com/carports/#carport-quote` opens the wizard as soon as the page loads.
+
+The Code module holding the wizard has to be on the same page as the button.
+
+### Just a button, or the whole wizard on the page
+Near the top of the file, find `<div class="skq-embed" data-style="card">`:
+
+- `data-style="card"` shows a box with a headline, a picture, and the button (the default).
+- `data-style="button"` shows only the button.
+- `data-mode="inline"` shows the whole questionnaire right on the page with no pop-up.
+
+---
+
+## Settings to fill in first
+
+Open the file and find **section 1, YOUR SETTINGS**. Change the text between the quotes:
+
+| Setting | What it does |
+|---|---|
+| `phone` | Your phone number. Adds a "Call us" button on the quote. |
+| `email` | Your sales email. Adds an "Email this quote to us" button. |
+| `leadWebhookUrl` | **Important.** Where customer contact info is sent. See below. |
+| `sale` | The sale banner. Set `enabled: false` to turn it off, or change `percent` and `label`. |
+| `depositPercent` | The deposit shown on the quote (10 right now). |
+| `requireContactInfo` | `true` means customers must enter name, phone, and email before they see the price. `false` shows a "Skip" button. |
+| `frameOutWithEachDoor` | `true` adds a frame-out charge to every door and window automatically. |
+| `accentColor` / `darkColor` | Your brand colors. |
+| `disclaimer` | The small print on the quote and PDF. |
+
+### Getting the leads (please read)
+Right now the wizard **collects** the customer's name, phone, and email but **doesn't send them anywhere**. To receive leads, set `leadWebhookUrl` to a URL from any of these services:
+
+- **Zapier**: create a Zap with the trigger "Webhooks by Zapier → Catch Hook", paste its URL here, then have Zapier email you or add a row to Google Sheets.
+- **Make.com**: create a "Custom webhook" scenario and paste its URL here.
+- **Google Sheets**: publish a Google Apps Script web app and paste its URL here.
+
+Every completed quote is sent there with the contact info, the building details, every line item, and the totals.
+
+---
+
+## Changing prices
+
+Everything is in **section 2, PRICE BOOK**. Each table is labeled. For example, `"20x35":4795` means a 20' x 35' building costs $4,795.
+
+- `gableEnd: null` and `extraBow: null` show as **"Priced by our team"** because the old price sheet had no price for them. Put a number in (like `gableEnd: 450,`) and they'll be added to the total automatically.
+
+### Two rules so Divi doesn't break the code
+1. **Don't leave empty lines** anywhere in the file.
+2. **Don't type the "and" symbol** (the one above the 7 key). Write the word "and" instead.
+
+---
+
+## What the customer goes through
+
+1. **Location:** ZIP code, what it sits on (dirt, gravel, concrete, asphalt), and what they'll use it for
+2. **Size:** width and length, with prices on every option
+3. **Height:** leg height, with suggested heights for their use (RV, boat, and so on)
+4. **Strength:** 14-gauge or 12-gauge, and standard or 60 lb snow load
+5. **Walls:** open, sides, ends, or fully enclosed, with a live building picture
+6. **Doors and windows:** roll-up doors, walk-in doors, windows, and framed openings. Only shown if they picked walls. Doors too tall for the legs are blocked.
+7. **Anchoring:** ground certification, double leg, mobile home anchors, and concrete bolts. Only the options that fit their surface are shown.
+8. **Extras:** extra panels, skylight panels, braces, gable ends, and extra bows
+9. **Colors:** roof, trim, and walls. The building picture changes color as they choose.
+10. **Contact info**
+11. **Quote:** the sale price, deposit, amount due at install, an itemized breakdown, a PDF download, print, email, and call
+
+The price updates live at the bottom the whole time. If a customer closes the wizard and comes back later, their answers are still there.
+
+---
+
+## Tests (for developers)
+```
+cd precert-carport-quote/tests
+npm install --no-save jspdf@2.5.1
+cd ../..
+NODE_PATH=$(npm root -g) node precert-carport-quote/tests/run-tests.cjs
+```
+The tests check 400 random buildings against the old calculator (`hm-12-24-pre-cert`). They also click through the whole questionnaire on desktop and phone inside a fake Divi page, and download the PDF.
