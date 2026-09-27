@@ -55,6 +55,7 @@
           <label>Width (ft)</label>
           <select id="width_ft">
             <option>12</option><option>18</option><option selected>20</option><option>22</option><option>24</option>
+            <option>26</option><option>28</option><option>30</option>
           </select>
         </div>
 
@@ -79,7 +80,7 @@
           <label>Snow Load</label>
           <select id="snow_load">
             <option value="standard" selected>Standard</option>
-            <option value="60">60 LB (+$3,240)</option>
+            <option value="60">60 LB (+$3,240 up to 24 wide)</option>
           </select>
         </div>
 
@@ -298,7 +299,7 @@
       </div>
 
       <div class="sk-note">
-        <strong>Note:</strong> Windows are $230 each. Snow Load 60 LB adds $3,240.
+        <strong>Note:</strong> Windows are $230 each. Snow Load 60 LB adds $3,240 (12-24 wide); 26-30 wide is priced by length from the triple-wide sheet.
       </div>
     </div>
   </div>
@@ -337,6 +338,65 @@ const ACCESSORIES = {
   concrete_bolt: 10,
   ground_cert: {21:595, 26:695, 31:695, 36:795, 41:895, 46:995, 51:1195}
 };
+
+/* ===== TRIPLE WIDE 26/28/30 (Certified 40LB + Triple Wide Option List) =====
+   Lengths 20..50 map to the sheet's 21'..51' columns.
+   null = marked NEEDS VERIFY on the sheet, so no quote is given for it. */
+const TRIPLE_WIDTHS = ["26","28","30"];
+const TW_LENGTHS = ["20","25","30","35","40","45","50"];
+
+const TW_BASE_14G = {
+  "26x20":4695,"26x25":5395,"26x30":6395,"26x35":7395,"26x40":8295,"26x45":9195,"26x50":9995,
+  "28x20":4995,"28x25":5795,"28x30":6695,"28x35":7695,"28x40":8595,"28x45":9495,"28x50":10495,
+  "30x20":5095,"30x25":5895,"30x30":6995,"30x35":7995,"30x40":8995,"30x45":9995,"30x50":10795
+};
+
+// Leg height adder, by height: [21',26',31',36',41',46',51']
+const TW_HEIGHT_ROWS = {
+  6:[0,0,0,0,0,0,0],
+  7:[100,115,140,160,180,200,220],
+  8:[230,275,310,370,420,470,520],
+  9:[340,420,470,560,630,700,770],
+  10:[540,640,700,840,950,1060,1160],
+  11:[680,820,900,1080,1220,1360,1490],
+  12:[840,1010,1105,1325,1495,1670,1825],
+  13:[1085,1305,1425,1710,1935,2155,2360],
+  14:[1335,1605,1755,2105,2385,2650,2900],
+  15:[1785,2145,2350,2815,3185,3545,3880],
+  16:[2175,2615,2860,3430,3880,4320,4730],
+  17:[null,3210,3510,4210,4760,5300,5800],
+  18:[2830,3405,3725,4465,5050,5620,6150],
+  19:[null,3485,3810,4570,5165,5745,6290],
+  20:[null,3485,3810,4780,5285,5815,6360]
+};
+
+// Both sides closed, by height: [21',26',31',36',41',46',51'] (sheet stops at 12ft)
+const TW_SIDEWALL_ROWS = {
+  6:[580,700,845,990,1140,1280,1420],
+  7:[820,985,1230,1350,1620,null,1860],
+  8:[850,1170,1420,1735,1960,2275,2310],
+  9:[1065,1325,1610,1870,2180,2305,2800],
+  10:[1240,null,1905,2255,2620,2795,3240],
+  11:[1380,1715,2080,2960,3305,3555,4050],
+  12:[1590,2035,2390,3095,null,null,null]
+};
+
+// One end closed, by height: [26' wide, 28' wide, 30' wide]
+const TW_ENDWALL_ROWS = {
+  6:[1690,1850,null], 7:[1645,1810,1990], 8:[1765,1945,2125], 9:[1885,2070,2260],
+  10:[2010,2200,2400], 11:[2130,2340,2530], 12:[2255,2460,2670], 13:[2380,2600,2810],
+  14:[2605,2850,3085], 15:[3465,3620,3770], 16:[3600,3750,3900], 17:[4970,5180,5390],
+  18:[5660,5895,6125], 19:[6340,6620,6910], 20:[6995,7300,7600]
+};
+
+// 60LB snow load for triple wide, by length: [21',26',31',36',41',46',51']
+const TW_SNOW_60 = [3240,3640,3740,3940,4140,4340,4490];
+
+function twCell(rows, h, col){
+  const row = rows[Number(h)];
+  if(!row || col < 0) return undefined;
+  return row[col];
+}
 
 /* ===== SNOW LOAD ADDER ===== */
 const SNOW_LOAD_ADD = {
@@ -396,7 +456,7 @@ function getInputs(){
 }
 
 function getBasePrice(size, gauge){
-  const base14 = BASE_14G[size];
+  const base14 = BASE_14G[size] ?? TW_BASE_14G[size];
   if(!base14) return null;
   if(gauge === "12") return Math.round(base14 * 1.15); // 12G add 15%
   return base14; // 14G
@@ -409,17 +469,28 @@ function calcQuote(){
   const base = getBasePrice(size, inp.gauge);
   if(base === null) return {ok:false, error:`Base price not found for ${size}`};
 
-  const snowAdder = (SNOW_LOAD_ADD[inp.snow_load] ?? 0);
+  const triple = TRIPLE_WIDTHS.includes(inp.w);
+  const lenCol = TW_LENGTHS.indexOf(inp.L);
+  const verify = (what) => ({ok:false, error:`${what} for ${size} × ${inp.h}ft is not on the triple-wide sheet (or marked NEEDS VERIFY) — confirm with Jeremy`});
 
-  const heightAdder = HEIGHT_ADD[`${inp.L}|${inp.h}`];
-  if(heightAdder === undefined) return {ok:false, error:`Height adder not found`};
+  let snowAdder = (SNOW_LOAD_ADD[inp.snow_load] ?? 0);
+  if(triple && inp.snow_load === "60") snowAdder = TW_SNOW_60[lenCol];
 
-  const sidewalls2 = SIDEWALLS_2[`${inp.L}|${inp.h}`];
-  if(sidewalls2 === undefined) return {ok:false, error:`Sidewall price not found`};
+  const heightAdder = triple ? twCell(TW_HEIGHT_ROWS, inp.h, lenCol) : HEIGHT_ADD[`${inp.L}|${inp.h}`];
+  if(heightAdder == null) return triple ? verify("Leg height price") : {ok:false, error:`Height adder not found`};
+
+  let sidewalls2 = triple ? twCell(TW_SIDEWALL_ROWS, inp.h, lenCol) : SIDEWALLS_2[`${inp.L}|${inp.h}`];
+  if(sidewalls2 == null){
+    if(inp.sidewall_qty === 2) return triple ? verify("Sidewall price") : {ok:false, error:`Sidewall price not found`};
+    sidewalls2 = 0;
+  }
   const sidewallsTotal = inp.sidewall_qty === 2 ? sidewalls2 : 0;
 
-  const endwall1 = ENDWALL_1[`${inp.w}|${inp.h}`];
-  if(endwall1 === undefined) return {ok:false, error:`Endwall price not found`};
+  let endwall1 = triple ? twCell(TW_ENDWALL_ROWS, inp.h, TRIPLE_WIDTHS.indexOf(inp.w)) : ENDWALL_1[`${inp.w}|${inp.h}`];
+  if(endwall1 == null){
+    if(inp.endwall_qty > 0) return triple ? verify("Endwall price") : {ok:false, error:`Endwall price not found`};
+    endwall1 = 0;
+  }
   const endwallsTotal = inp.endwall_qty * endwall1;
 
   const acc = {};
