@@ -11,8 +11,8 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const WIZARD = fs.readFileSync(path.join(ROOT, "precert-carport-quote", "skyliner-precert-carport-quote.html"), "utf8");
-// Reference calculator: hm-12-24-pre-cert plus the triple-wide (26/28/30) sheets, from branch claude/charming-shannon-nglira
-const OLD = fs.readFileSync(path.join(__dirname, "fixtures", "hm-triple-wide-reference.html"), "utf8");
+// Reference calculators (tests/fixtures): triple-wide sheets from branch claude/charming-shannon-nglira,
+// 60 ft / 13-17 ft widths / $250 gable ends from branch claude/relaxed-gates-0qiqu0.
 const SHOTS = path.join(__dirname, "screenshots");
 fs.mkdirSync(SHOTS, { recursive: true });
 
@@ -50,22 +50,32 @@ function check(cond, msg) {
 
 function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-async function priceParity(browser) {
-  console.log("\n[1] Price parity with old calculator");
+const SALE_ON = { enabled: true, label: "Fall Sale", endsOn: "2099-12-31", tiers: [{ from: 0, percent: 5 }, { from: 5000, percent: 10 }, { from: 15000, percent: 15 }] };
+const tierPct = (t) => (t >= 15000 ? 15 : (t >= 5000 ? 10 : 5));
+
+async function wizardPage(browser, sale) {
+  const page = await browser.newPage();
+  await page.setContent(`<!doctype html><html><body><script>window.SkylinerQuoteConfig = { sale: ${JSON.stringify(sale)} };</script>${WIZARD}</body></html>`);
+  return page;
+}
+
+async function priceParity(browser, fixture, widths, lengths, withGables, n) {
+  console.log(`\n[1] Price parity with ${fixture}`);
+  const OLD_SRC = fs.readFileSync(path.join(__dirname, "fixtures", fixture), "utf8");
   const oldPage = await browser.newPage();
   await oldPage.route("**/jspdf*", r => r.fulfill({ body: "" }));
-  await oldPage.setContent(`<!doctype html><html><body>${OLD}</body></html>`);
-  const newPage = await browser.newPage();
-  await newPage.setContent(`<!doctype html><html><body>${WIZARD}</body></html>`);
+  await oldPage.setContent(`<!doctype html><html><body>${OLD_SRC}</body></html>`);
+  const newPage = await wizardPage(browser, SALE_ON);
   let mismatches = 0, callForPrice = 0;
-  for (let i = 0; i < 1500; i++) {
+  for (let i = 0; i < n; i++) {
     const c = {
-      gauge: rand(["14", "12"]), w: rand([12, 18, 20, 22, 24, 26, 28, 30]), L: rand([20, 25, 30, 35, 40, 45, 50]), h: rand([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]),
+      gauge: rand(["14", "12"]), w: rand(widths), L: rand(lengths), h: rand([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]),
       snow: rand(["standard", "60"]), side: rand([0, 2]), end: rand([0, 1, 2]),
       xp: rand([0, 1, 2, 5]), xpl: rand([21, 26, 31, 36, 41]), cp: rand([0, 1, 4]), cpl: rand([12, 16]),
       gd: rand([0, 1, 3]), gds: rand(["8x7", "9x8", "10x8", "10x10"]), wi: rand([0, 1, 2]), win: rand([0, 1, 4]),
       wf: rand([0, 2]), df: rand([0, 1]), gf: rand([0, 2]), br: rand([0, 3]), brs: rand([2, 3, 4]),
-      gc: rand([0, 1]), dl: rand([false, true]), ma: rand([0, 2, 8]), mai: rand(["installed", "not_installed"]), cb: rand([0, 4, 16])
+      gc: rand([0, 1]), dl: rand([false, true]), ma: rand([0, 2, 8]), mai: rand(["installed", "not_installed"]), cb: rand([0, 4, 16]),
+      gab: withGables ? rand([0, 1, 2]) : 0
     };
     // Doors/windows only exist when there are walls in the new wizard (the old one allowed them on an open carport).
     if (c.side + c.end === 0) { c.gd = 0; c.wi = 0; c.win = 0; c.wf = 0; c.df = 0; c.gf = 0; }
@@ -75,30 +85,57 @@ async function priceParity(browser) {
       set("sidewall_qty", c.side); set("endwall_qty", c.end); set("extra_panel_qty", c.xp); set("extra_panel_length", c.xpl);
       set("clear_panel_qty", c.cp); set("clear_panel_length", c.cpl); set("garage_door_qty", c.gd); set("garage_door_size", c.gds);
       set("walkin_door_qty", c.wi); set("window_qty", c.win); set("window_frame_qty", c.wf); set("door_frame_qty", c.df); set("garage_frame_qty", c.gf);
-      set("brace_qty", c.br); set("brace_size", c.brs); set("ground_cert_qty", c.gc); set("ground_cert_length", c.L + 1);
+      set("brace_qty", c.br); set("brace_size", c.brs); set("ground_cert_qty", c.gc); set("ground_cert_length", c.L + 1); set("gable_qty", c.gab);
+      if (c.gc && document.getElementById("ground_cert_length").value !== String(c.L + 1)) return "no-cert-option";
       document.getElementById("ground_cert_doubleleg").checked = c.dl;
       set("mobile_anchor_qty", c.ma); set("mobile_anchor_install", c.mai); set("concrete_bolt_qty", c.cb);
       const r = calcQuote(); // eslint-disable-line no-undef
       return r.ok ? r.total : null;
     }, c);
+    if (oldTotal === "no-cert-option") { mismatches++; console.log("   reference has no ground cert for", c.L + 1); continue; }
     const q = await newPage.evaluate((c) => {
       const gd = {}; gd[c.gds] = c.gd; const br = {}; br[c.brs] = c.br;
       return window.SkylinerQuote.price({
         width: c.w, length: c.L, height: c.h, gauge: c.gauge, snow: c.snow, sidewalls: c.side, endwalls: c.end,
         garageDoors: gd, walkins: c.wi, windows: c.win, windowFrames: c.wf, doorFrames: c.df, garageFrames: c.gf,
         surface: "unsure", groundCert: c.gc ? "yes" : "no", doubleLeg: c.dl, mobileAnchors: c.ma, anchorInstall: c.mai, concreteBolts: c.cb,
-        extraPanels: c.xp, extraPanelLen: c.xpl, clearPanels: c.cp, clearPanelLen: c.cpl, braces: br, gables: 0, bows: 0
+        extraPanels: c.xp, extraPanelLen: c.xpl, clearPanels: c.cp, clearPanelLen: c.cpl, braces: br, gables: c.gab, bows: 0, roofExt: 0
       });
     }, c);
     if (oldTotal === null) { callForPrice++; if (!q.blockers.length) { mismatches++; console.log("   should be call-for-price", JSON.stringify(c)); } continue; }
     if (q.blockers.length) { mismatches++; console.log("   unexpected call-for-price", JSON.stringify(c), q.blockers); continue; }
     if (q.subtotal !== oldTotal) { mismatches++; if (mismatches < 5) console.log("   mismatch", JSON.stringify(c), "old", oldTotal, "new", q.subtotal); }
-    // sale/deposit math must match the old PDF math exactly
-    const disc = Math.round(oldTotal * 0.10), after = oldTotal - disc, dep = Math.round(after * 0.10);
-    if (q.total !== after || q.deposit !== dep || q.due !== after - dep) { mismatches++; console.log("   sale/deposit mismatch", oldTotal, q); }
+    // Fall Sale tiers (5% / 10% at $5k / 15% at $15k) and 10% deposit
+    const disc = Math.round(oldTotal * tierPct(oldTotal) / 100), after = oldTotal - disc, dep = Math.round(after * 0.10);
+    if (q.total !== after || q.deposit !== dep || q.due !== after - dep) { mismatches++; console.log("   sale/deposit mismatch", oldTotal, q.salePct, q.total); }
   }
-  check(mismatches === 0, `1500 random buildings (12'-30' wide) match the reference calculator; ${callForPrice} unpriced sheet cells correctly show "Call for price"`);
+  check(mismatches === 0, `${n} random buildings (widths ${widths[0]}'-${widths[widths.length - 1]}', lengths up to ${lengths[lengths.length - 1]}') match; ${callForPrice} unpriced cells show "Call for price"; Fall Sale tiers correct`);
   await oldPage.close(); await newPage.close();
+}
+
+async function saleRules(browser) {
+  console.log("\n[1b] Fall Sale rules");
+  const on = await wizardPage(browser, SALE_ON);
+  const tiers = await on.evaluate(() => {
+    const out = [];
+    const base = { width: 12, length: 20, height: 6, gauge: "14", snow: "standard", sidewalls: 0, endwalls: 0, surface: "concrete" };
+    // 12x20 = $2,295. Add $10 concrete bolts to reach exact totals.
+    for (const target of [4995, 5005, 14995, 15005]) {
+      const q = window.SkylinerQuote.price(Object.assign({}, base, { concreteBolts: Math.round((target - 2295) / 10) }));
+      out.push([q.subtotal, q.salePct]);
+    }
+    const r = window.SkylinerQuote.price(Object.assign({}, base, { roofExt: 2, gables: 1 }));
+    out.push([r.subtotal, r.lines.map(l => l.label).join("|")]);
+    return out;
+  });
+  check(tiers[0][1] === 5 && tiers[1][1] === 10 && tiers[2][1] === 10 && tiers[3][1] === 15, "sale tiers: under $5k = 5%, $5k-$15k = 10%, $15k+ = 15% (" + JSON.stringify(tiers.slice(0, 4)) + ")");
+  check(tiers[4][0] === 2295 + 1000 + 250, "5' roof extension $500 each and gable end $250 each are added to the price");
+  const ended = await wizardPage(browser, Object.assign({}, SALE_ON, { endsOn: "2020-01-01" }));
+  const q = await ended.evaluate(() => window.SkylinerQuote.price({ width: 20, length: 30, height: 10 }));
+  check(q.sale === 0 && q.total === q.subtotal, "sale turns itself off after its end date");
+  const sixty = await on.evaluate(() => [window.SkylinerQuote.price({ width: 20, length: 60, height: 10, sidewalls: 2 }), window.SkylinerQuote.price({ width: 30, length: 60, height: 10 })]);
+  check(sixty[0].subtotal === 2 * 4195 + 2 * 953 + 2 * 1420 && sixty[1].blockers.length === 1, "60' = two 30' sections; triple-wide 60' is 'Call for price'");
+  await on.close(); await ended.close();
 }
 
 async function walkthrough(browser, viewport, tag, hosted) {
@@ -190,13 +227,13 @@ async function walkthrough(browser, viewport, tag, hosted) {
   const expected = await page.evaluate(() => window.SkylinerQuote.price(window.SkylinerQuote._state()));
   // Hand-computed from the price sheet: 20x35 base 4795; 12ga +15% = 719 (round 5514.25 -> 5514); height 12 @35 = 1295;
   // snow 3240; sidewalls 35|12 = 2060; endwalls 2 x 20|12 1510 = 3020; 10x10 door 1295; walk-in 350; windows 2 x 230 = 460;
-  // ground cert 36' 795 x2 = 1590; mobile anchors 4 x 35 = 140; extra panel 36' = 230; braces 2 x 10 = 20; gable = TBD.
-  const hand = 4795 + 719 + 1295 + 3240 + 2060 + 3020 + 1295 + 350 + 460 + 1590 + 140 + 230 + 20;
+  // ground cert 36' 795 x2 = 1590; mobile anchors 4 x 35 = 140; extra panel 36' = 230; braces 2 x 10 = 20; gable end 250.
+  const hand = 4795 + 719 + 1295 + 3240 + 2060 + 3020 + 1295 + 350 + 460 + 1590 + 140 + 230 + 20 + 250;
   check(expected.subtotal === hand, `subtotal ${expected.subtotal} equals hand calculation ${hand}`);
   const shown = await page.textContent(".skq-total-v");
   check(shown.trim() === "$" + expected.total.toLocaleString("en-US"), "quote page shows sale price " + shown.trim());
-  check((await page.textContent(".skq-content")).includes("Gable end"), "unpriced gable end listed as 'priced by our team'");
-  check(expected.tbd.length === 1, "one TBD item");
+  check((await page.textContent(".skq-content")).includes("Gable end"), "gable end listed on the quote");
+  check(expected.tbd.length === 0, "no 'priced by our team' items (gable ends now $250)");
   if (hosted) check(await page.isVisible('.skq-content a[href^="tel:"]'), "settings typed in the Divi snippet (phone) are used");
   await page.screenshot({ path: path.join(SHOTS, `${tag}-10-quote.png`) });
   await page.screenshot({ path: path.join(SHOTS, `${tag}-10-quote-full.png`), fullPage: true });
@@ -254,7 +291,9 @@ async function inlineMode(browser) {
 (async () => {
   const browser = await chromium.launch();
   try {
-    await priceParity(browser);
+    await priceParity(browser, "hm-triple-wide-reference.html", [12, 18, 20, 22, 24, 26, 28, 30], [20, 25, 30, 35, 40, 45, 50], false, 1200);
+    await priceParity(browser, "hm-60ft-odd-widths-reference.html", [12, 13, 14, 15, 16, 17, 18, 20, 22, 24], [20, 25, 30, 35, 40, 45, 50, 60], true, 800);
+    await saleRules(browser);
     await walkthrough(browser, { width: 1366, height: 860 }, "desktop");
     await walkthrough(browser, { width: 390, height: 844 }, "mobile");
     await walkthrough(browser, { width: 1366, height: 860 }, "hosted", true);

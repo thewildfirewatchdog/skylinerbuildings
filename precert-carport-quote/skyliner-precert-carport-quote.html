@@ -188,7 +188,16 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     accentColor: "#2563eb",    /* buttons and highlights */
     darkColor: "#111827",      /* header bar and total box */
     roofStyleName: "A-Frame (Vertical Roof)",
-    sale: { enabled: true, percent: 10, label: "Holiday Sale" },
+    sale: {                    /* Fall Sale: % off depends on the building total (before the sale) */
+      enabled: true,
+      label: "Fall Sale",
+      endsOn: "2026-10-01",    /* last day of the sale (YYYY-MM-DD). It turns off by itself after this day. */
+      tiers: [                 /* from = building total in dollars */
+        { from: 0, percent: 5 },       /* under $5,000         -> 5% off  */
+        { from: 5000, percent: 10 },   /* $5,000 to $14,999    -> 10% off */
+        { from: 15000, percent: 15 }   /* $15,000 and up       -> 15% off */
+      ]
+    },
     depositPercent: 10,
     requireContactInfo: true,  /* true = customer must enter name/phone/email before seeing the price */
     frameOutWithEachDoor: false, /* true = automatically add a frame-out charge for every door and window */
@@ -199,8 +208,10 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
      2) PRICE BOOK  -  Pre-certified, 14-gauge base prices
      ==================================================================== */
   var PRICES = {
-    widths: [12, 18, 20, 22, 24, 26, 28, 30],
-    lengths: [20, 25, 30, 35, 40, 45, 50],
+    widths: [12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28, 30],
+    pricedAs18: [13, 14, 15, 16, 17],   /* 13' to 17' wide = an 18' building cut down, priced as 18' (base and end walls) */
+    lengths: [20, 25, 30, 35, 40, 45, 50, 60],
+    joinedLengths: { 60: 30 },          /* 60' = two 30' buildings joined: base, leg height and sidewalls are the 30' price x2 */
     heights: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
     /* Base building (frame + roof, 6 ft legs), 14-gauge.  "width x length": price */
     base14: {"12x20":2295,"12x25":2895,"12x30":3395,"12x35":3995,"12x40":4395,"12x45":4995,"12x50":5595,"18x20":2795,"18x25":3395,"18x30":3995,"18x35":4495,"18x40":4995,"18x45":5595,"18x50":6195,"20x20":2995,"20x25":3595,"20x30":4195,"20x35":4795,"20x40":5595,"20x45":6295,"20x50":6995,"22x20":3395,"22x25":3995,"22x30":4695,"22x35":5395,"22x40":6195,"22x45":6895,"22x50":7595,"24x20":3595,"24x25":4595,"24x30":5195,"24x35":5895,"24x40":6595,"24x45":7595,"24x50":8395},
@@ -238,9 +249,10 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     extraPanel: { 21: 130, 26: 160, 31: 200, 36: 230, 41: 260 },   /* panel length (ft): price */
     clearPanel: { 12: 150, 16: 200 },                               /* skylight panel length (ft): price */
     brace: { 2: 10, 3: 15, 4: 20 },                                 /* brace size (ft): price */
-    gableEnd: null,            /* null = "priced by our team" (no price on file yet) */
+    gableEnd: 250,
     extraBow: null,            /* null = "priced by our team" (no price on file yet) */
-    groundCert: { 21: 595, 26: 695, 31: 695, 36: 795, 41: 895, 46: 995, 51: 1195 }, /* building length + 1 ft */
+    roofExtension: 500,        /* 5' roof extension, each */
+    groundCert: { 21: 595, 26: 695, 31: 695, 36: 795, 41: 895, 46: 995, 51: 1195, 61: 1390 }, /* building length + 1 ft (61' = two 31') */
     mobileAnchor: { installed: 35, not_installed: 30 },
     concreteBolt: 10
   };
@@ -318,7 +330,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
       sidewalls: 0, endwalls: 0,
       garageDoors: {}, walkins: 0, windows: 0, windowFrames: 0, doorFrames: 0, garageFrames: 0,
       groundCert: "", doubleLeg: false, mobileAnchors: 0, anchorInstall: "installed", concreteBolts: 0,
-      extraPanels: 0, extraPanelLen: null, clearPanels: 0, clearPanelLen: 12, braces: {}, gables: 0, bows: 0,
+      extraPanels: 0, extraPanelLen: null, clearPanels: 0, clearPanelLen: 12, braces: {}, gables: 0, bows: 0, roofExt: 0,
       roofColor: "", trimColor: "", wallColor: "",
       name: "", phone: "", email: "", timeframe: "", contactPref: "", notes: "",
       quoteId: "", quoteDate: "", leadSent: false, reachedQuote: false
@@ -349,10 +361,23 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
   function isTriple(w) { return isIn(w, PRICES.tripleWide.widths); }
   function lenIdx(L) { return PRICES.lengths.indexOf(L); }
   function twCell(rows, h, i) { var row = rows[h]; if (!row) return undefined; var v = row[i]; return v === null ? undefined : v; }
-  function baseFor(w, L) { return isTriple(w) ? PRICES.tripleWide.base14[w + "x" + L] : PRICES.base14[w + "x" + L]; }
-  function heightFor(w, L, h) { return isTriple(w) ? twCell(PRICES.tripleWide.heightAdd, h, lenIdx(L)) : PRICES.heightAdd[L + "|" + h]; }
-  function sidewallsFor(w, L, h) { return isTriple(w) ? twCell(PRICES.tripleWide.sidewallsBoth, h, lenIdx(L)) : PRICES.sidewallsBoth[L + "|" + h]; }
-  function endwallFor(w, h) { return isTriple(w) ? twCell(PRICES.tripleWide.endwallEach, h, PRICES.tripleWide.widths.indexOf(w)) : PRICES.endwallEach[w + "|" + h]; }
+  function priceW(w) { return isIn(w, PRICES.pricedAs18) ? 18 : w; }
+  function joined(L) { return PRICES.joinedLengths[L] || null; }
+  function times(v, L) { return v === undefined ? undefined : (joined(L) ? v * 2 : v); }
+  function baseFor(w, L) { return isTriple(w) ? PRICES.tripleWide.base14[w + "x" + L] : times(PRICES.base14[priceW(w) + "x" + (joined(L) || L)], L); }
+  function gauge12For(w, L) { var one = isTriple(w) ? PRICES.tripleWide.base14[w + "x" + L] : PRICES.base14[priceW(w) + "x" + (joined(L) || L)]; return one === undefined ? undefined : times(Math.round(one * (1 + PRICES.gauge12Percent / 100)) - one, isTriple(w) ? 0 : L); }
+  function heightFor(w, L, h) { return isTriple(w) ? twCell(PRICES.tripleWide.heightAdd, h, lenIdx(L)) : times(PRICES.heightAdd[(joined(L) || L) + "|" + h], L); }
+  function sidewallsFor(w, L, h) { return isTriple(w) ? twCell(PRICES.tripleWide.sidewallsBoth, h, lenIdx(L)) : times(PRICES.sidewallsBoth[(joined(L) || L) + "|" + h], L); }
+  function endwallFor(w, h) { return isTriple(w) ? twCell(PRICES.tripleWide.endwallEach, h, PRICES.tripleWide.widths.indexOf(w)) : PRICES.endwallEach[priceW(w) + "|" + h]; }
+  function todayISO() { var d = new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  function saleOn() { return CONFIG.sale.enabled ? (CONFIG.sale.endsOn ? todayISO() <= CONFIG.sale.endsOn : true) : false; }
+  function salePercent(amount) { var pct = 0; (CONFIG.sale.tiers || []).forEach(function (t) { if (amount >= t.from) pct = t.percent; }); return pct; }
+  function saleEndText() { if (!CONFIG.sale.endsOn) return ""; var p = CONFIG.sale.endsOn.split("-"); return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }); }
+  function saleTiersText() {
+    var t = CONFIG.sale.tiers || [];
+    return t.map(function (x, i) { var next = t[i + 1]; return x.percent + "% off " + (i === 0 ? "under " + money(next ? next.from : 0) : (next ? money(x.from) + " to " + money(next.from - 1) : money(x.from) + " and up")); }).join(", ");
+  }
+  function maxSalePct() { var m = 0; (CONFIG.sale.tiers || []).forEach(function (t) { if (t.percent > m) m = t.percent; }); return m; }
   function snowFor(w, L, k) {
     if (!PRICES.snowLoad[k]) return 0;
     if (!isTriple(w)) return PRICES.snowLoad[k];
@@ -367,15 +392,15 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     var r = { lines: [], tbd: [], warnings: [], blockers: [], subtotal: 0, sale: 0, total: 0, deposit: 0, due: 0, hasSize: false, complete: false };
     if (!w || !L) return r;
     var base14 = baseFor(w, L);
-    if (base14 === undefined) { r.warnings.push("We don't have a price on file for " + w + "' x " + L + "'."); return r; }
+    if (base14 === undefined) { r.blockers.push({ step: "size", msg: "A " + w + "' x " + L + "' building needs a custom price. Please call us, or pick a different size." }); return r; }
     r.hasSize = true;
     r.complete = Boolean(s.height);
     function add(group, lbl, qty, each, note) {
       r.lines.push({ group: group, label: lbl, qty: qty, each: each, amount: each === null ? null : Math.round(qty * each), note: note || "" });
       if (each === null) r.tbd.push(lbl);
     }
-    add("Building", w + "' x " + L + "' pre-certified frame and roof", 1, base14, CONFIG.roofStyleName + ", 14-gauge, 6' legs");
-    if (s.gauge === "12") add("Building", "12-gauge frame upgrade", 1, Math.round(base14 * (1 + P.gauge12Percent / 100)) - base14, "Heavier-duty steel (+" + P.gauge12Percent + "% of building)");
+    add("Building", w + "' x " + L + "' pre-certified frame and roof", 1, base14, CONFIG.roofStyleName + ", 14-gauge, 6' legs" + (joined(L) ? ", two " + joined(L) + "' sections joined" : "") + (priceW(w) !== w ? ", cut down from an 18' frame" : ""));
+    if (s.gauge === "12") add("Building", "12-gauge frame upgrade", 1, gauge12For(w, L), "Heavier-duty steel (+" + P.gauge12Percent + "% of building)");
     var callMsg = " needs a custom price for this size. Please call us, or pick a different option.";
     var hAdd = heightFor(w, L, h);
     if (hAdd === undefined) r.blockers.push({ step: "height", msg: h + "' legs on a " + w + "' x " + L + "' building" + callMsg });
@@ -428,9 +453,11 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     if (s.clearPanels > 0) add("Extras", "Clear skylight panel (" + s.clearPanelLen + "')", s.clearPanels, P.clearPanel[s.clearPanelLen], s.clearPanels > 1 ? money(P.clearPanel[s.clearPanelLen]) + " each" : "");
     numKeys(P.brace).forEach(function (sz) { var q = num((s.braces || {})[sz]); if (q > 0) add("Extras", "Extra brace (" + sz + "')", q, P.brace[sz], q > 1 ? money(P.brace[sz]) + " each" : ""); });
     if (s.gables > 0) add("Extras", "Gable end" + (s.gables > 1 ? "s" : ""), s.gables, P.gableEnd, P.gableEnd === null ? "Priced by our team" : "");
+    if (s.roofExt > 0) add("Extras", "5' roof extension", s.roofExt, P.roofExtension, s.roofExt > 1 ? money(P.roofExtension) + " each" : "");
     if (s.bows > 0) add("Extras", "Extra bow" + (s.bows > 1 ? "s" : ""), s.bows, P.extraBow, P.extraBow === null ? "Priced by our team" : "");
     r.lines.forEach(function (l) { if (l.amount !== null) r.subtotal += l.amount; });
-    r.sale = CONFIG.sale.enabled ? Math.round(r.subtotal * CONFIG.sale.percent / 100) : 0;
+    r.salePct = saleOn() ? salePercent(r.subtotal) : 0;
+    r.sale = Math.round(r.subtotal * r.salePct / 100);
     r.total = r.subtotal - r.sale;
     r.deposit = Math.round(r.total * CONFIG.depositPercent / 100);
     r.due = r.total - r.deposit;
@@ -566,7 +593,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
   /* ---------------- steps ---------------- */
   var STEPS = [
     { id: "site", nav: "Location", title: "Where is your building going?", sub: "This helps us match the right certification and anchoring for your site.", html: stepSite, check: checkSite },
-    { id: "size", nav: "Size", title: "How big do you need it?", sub: "Width is side to side. Length is front to back.", html: stepSize, check: function (s) { return !s.width ? "Please pick a width." : (!s.length ? "Please pick a length." : ""); } },
+    { id: "size", nav: "Size", title: "How big do you need it?", sub: "Width is side to side. Length is front to back.", html: stepSize, check: function (s) { return !s.width ? "Please pick a width." : (!s.length ? "Please pick a length." : firstBlocker(s, "size")); } },
     { id: "height", nav: "Height", title: "How tall should the legs be?", sub: "Leg height is measured from the ground to where the roof starts. Taller legs mean more clearance.", html: stepHeight, check: function (s) { return s.height ? firstBlocker(s, "height") : "Please pick a leg height."; } },
     { id: "strength", nav: "Strength", title: "Frame strength and snow load", sub: "Every building in this program is pre-certified. Choose extra strength if you need it.", html: stepStrength, check: function (s) { return firstBlocker(s, "strength"); } },
     { id: "walls", nav: "Walls", title: "Do you want any walls?", sub: "Leave it open as a carport, or enclose it all the way into a garage.", html: stepWalls, check: function (s) { return firstBlocker(s, "walls"); } },
@@ -608,8 +635,8 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
   }
   function stepSize() {
     var L = S.length || PRICES.lengths[0], wref = S.width || PRICES.widths[0];
-    var wOpts = PRICES.widths.map(function (w) { return { value: w, label: w + "' wide", sub: isTriple(w) ? "Triple wide" : "", price: (S.length ? "" : "from ") + money(baseFor(w, L)) }; });
-    var lOpts = PRICES.lengths.map(function (l) { return { value: l, label: l + "' long", sub: "", price: (S.width ? "" : "from ") + money(baseFor(wref, l)) }; });
+    var wOpts = PRICES.widths.map(function (w) { return { value: w, label: w + "' wide", sub: isTriple(w) ? "Triple wide" : "", price: baseFor(w, L) === undefined ? CALL : (S.length ? "" : "from ") + money(baseFor(w, L)), disabled: baseFor(w, L) === undefined }; });
+    var lOpts = PRICES.lengths.map(function (l) { return { value: l, label: l + "' long", sub: joined(l) ? "Two " + joined(l) + "' sections" : "", price: baseFor(wref, l) === undefined ? CALL : (S.width ? "" : "from ") + money(baseFor(wref, l)), disabled: baseFor(wref, l) === undefined }; });
     return '<div class="skq-q"><div class="skq-label">Width</div>' + choice("width", wOpts, S.width, "", "Width") + "</div>" +
       '<div class="skq-q"><div class="skq-label">Length</div>' + choice("length", lOpts, S.length, "", "Length") + "</div>";
   }
@@ -704,6 +731,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     out += '<div class="skq-sec">Framing</div><div class="skq-rows">';
     numKeys(PRICES.brace).forEach(function (sz) { out += stepper("braces." + sz, "Extra " + sz + "' braces", "Added bracing at the corners", money(PRICES.brace[sz]) + " each", { max: 20 }); });
     out += stepper("gables", "Gable ends", "Closes the triangle at the top of an open end", PRICES.gableEnd === null ? "Priced by our team" : money(PRICES.gableEnd) + " each", { max: 2, tbd: PRICES.gableEnd === null });
+    out += stepper("roofExt", "5' roof extension", "Extends the roof 5 feet past the building", money(PRICES.roofExtension) + " each", { max: 2 });
     out += stepper("bows", "Extra bows (trusses)", "Additional roof trusses", PRICES.extraBow === null ? "Priced by our team" : money(PRICES.extraBow) + " each", { max: 6, tbd: PRICES.extraBow === null }) + "</div>";
     return out;
   }
@@ -728,9 +756,10 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     var q = priceQuote(S), groups = [], out = "";
     q.lines.forEach(function (l) { if (!isIn(l.group, groups)) groups.push(l.group); });
     out += '<div class="skq-sub">Quote #' + esc(S.quoteId) + " · " + esc(S.quoteDate) + (S.name ? " · Prepared for " + esc(S.name) : "") + "</div>";
-    out += '<div class="skq-total"><div><div class="skq-total-l">' + (CONFIG.sale.enabled ? "Your sale price" : "Your price") + '</div><div class="skq-total-v">' + money(q.total) + "</div>" +
-      (CONFIG.sale.enabled ? '<div class="skq-total-was">Regular price <s>' + money(q.subtotal) + '</s></div><div class="skq-total-save">You save ' + money(q.sale) + " with our " + esc(CONFIG.sale.label) + " (" + CONFIG.sale.percent + "% off)</div>" : "") +
+    out += '<div class="skq-total"><div><div class="skq-total-l">' + (saleOn() ? "Your sale price" : "Your price") + '</div><div class="skq-total-v">' + money(q.total) + "</div>" +
+      (saleOn() ? '<div class="skq-total-was">Regular price <s>' + money(q.subtotal) + '</s></div><div class="skq-total-save">You save ' + money(q.sale) + " with our " + esc(CONFIG.sale.label) + " (" + q.salePct + "% off)</div>" : "") +
       '</div><div class="skq-total-r">Deposit to order (' + CONFIG.depositPercent + "%)<br><b>" + money(q.deposit) + "</b><br>Due at installation<br><b>" + money(q.due) + "</b></div></div>";
+    if (saleOn()) out += note("<b>" + esc(CONFIG.sale.label) + ":</b> " + esc(saleTiersText()) + (CONFIG.sale.endsOn ? ". Ends " + esc(saleEndText()) + "." : "."));
     if (q.warnings.length) out += '<div class="skq-err" role="alert">' + q.warnings.map(esc).join("<br>") + "</div>";
     if (q.tbd.length) out += note("<b>Priced by our team:</b> " + esc(q.tbd.join(", ")) + ". These items aren't in the total yet. We'll add them when we confirm your order.", "skq-warn");
     if (!CONFIG.leadWebhookUrl ? false : S.leadSent) out += note("<b>Thanks, " + esc(S.name.split(" ")[0]) + "!</b> We received your quote and a building specialist will reach out soon.", "skq-ok");
@@ -752,7 +781,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
       });
     });
     out += '<tr class="skq-tt"><td>Subtotal</td><td>' + money(q.subtotal) + "</td></tr>";
-    if (CONFIG.sale.enabled) out += '<tr class="skq-ts"><td>' + esc(CONFIG.sale.label) + " (" + CONFIG.sale.percent + '% off)</td><td>-' + money(q.sale) + "</td></tr>" + '<tr class="skq-tt"><td>Total</td><td>' + money(q.total) + "</td></tr>";
+    if (saleOn()) out += '<tr class="skq-ts"><td>' + esc(CONFIG.sale.label) + " (" + q.salePct + '% off)</td><td>-' + money(q.sale) + "</td></tr>" + '<tr class="skq-tt"><td>Total</td><td>' + money(q.total) + "</td></tr>";
     out += "<tr><td>Deposit to order (" + CONFIG.depositPercent + "%)</td><td>" + money(q.deposit) + "</td></tr><tr><td>Due at installation</td><td>" + money(q.due) + "</td></tr></tbody></table>";
     out += '<div class="skq-disc">' + esc(CONFIG.disclaimer) + (CONFIG.quoteValidDays > 0 ? " Prices valid for " + CONFIG.quoteValidDays + " days." : "") + "</div>";
     out += '<div class="skq-actions" style="margin-top:20px"><button type="button" class="skq-btn skq-btn-g" data-act="restart">Start a new quote</button></div>';
@@ -762,7 +791,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     var resuming = S.width ? true : Boolean(S.zip);
     return '<div class="skq-hero"><div class="skq-h" id="skq-step-h" tabindex="-1" role="heading" aria-level="2">Price your pre-certified carport in about 2 minutes</div>' +
       '<div class="skq-sub">Answer a few simple questions. Your price updates as you go.</div>' +
-      '<ul class="skq-hero-list"><li>Instant, itemized price with no waiting on a call back</li><li>Pre-certified steel buildings, ' + PRICES.widths[0] + "' to " + PRICES.widths[PRICES.widths.length - 1] + "' wide</li>" + '<li>See your building as you design it</li><li>Download or print your quote as a PDF</li></ul>' +
+      '<ul class="skq-hero-list">' + (saleOn() ? "<li><b>" + esc(CONFIG.sale.label) + ":</b> " + esc(saleTiersText()) + (CONFIG.sale.endsOn ? ". Ends " + esc(saleEndText()) + "." : "") + "</li>" : "") + '<li>Instant, itemized price with no waiting on a call back</li><li>Pre-certified steel buildings, ' + PRICES.widths[0] + "' to " + PRICES.widths[PRICES.widths.length - 1] + "' wide</li>" + '<li>See your building as you design it</li><li>Download or print your quote as a PDF</li></ul>' +
       '<div class="skq-hero-steps">' + visibleSteps().map(function (st) { return "<span>" + esc(st.nav) + "</span>"; }).join("") + "</div>" +
       '<div class="skq-actions">' + (resuming ? '<button type="button" class="skq-btn skq-btn-p skq-btn-lg" data-act="resume">Continue my quote</button><button type="button" class="skq-btn skq-btn-g skq-btn-lg" data-act="restart">Start over</button>' : '<button type="button" class="skq-btn skq-btn-p skq-btn-lg" data-act="begin">Let\'s get started</button>') + "</div></div>";
   }
@@ -770,7 +799,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     var q = priceQuote(S);
     return '<div class="skq-pv">' + buildingSVG(S) + '<div class="skq-pv-dim">' + (S.width ? S.width + "' W × " + S.length + "' L" + (S.height ? " × " + S.height + "' H" : "") : "Pick a size to preview") + "</div></div>" +
       '<ul class="skq-specs">' + specList(S).slice(0, 7).map(function (it) { return "<li><span>" + esc(it[0]) + "</span><span>" + esc(it[1]) + "</span></li>"; }).join("") +
-      (q.hasSize ? "<li><span>Subtotal</span><span>" + money(q.subtotal) + "</span></li>" + (CONFIG.sale.enabled ? "<li><span>" + esc(CONFIG.sale.label) + "</span><span style=\"color:var(--ok)\">-" + money(q.sale) + "</span></li>" : "") : "") + "</ul>";
+      (q.hasSize ? "<li><span>Subtotal</span><span>" + money(q.subtotal) + "</span></li>" + (saleOn() ? "<li><span>" + esc(CONFIG.sale.label) + "</span><span style=\"color:var(--ok)\">-" + money(q.sale) + "</span></li>" : "") : "") + "</ul>";
   }
   /* ---------------- quote output: text, PDF, print ---------------- */
   function quoteText() {
@@ -781,7 +810,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     t.push("", "PRICE BREAKDOWN");
     q.lines.forEach(function (l) { t.push("- " + l.label + (l.qty > 1 ? " x " + l.qty : "") + ": " + (l.amount === null ? "TBD" : money(l.amount))); });
     t.push("", "Subtotal: " + money(q.subtotal));
-    if (CONFIG.sale.enabled) t.push(CONFIG.sale.label + " (" + CONFIG.sale.percent + "% off): -" + money(q.sale), "Total: " + money(q.total));
+    if (saleOn()) t.push(CONFIG.sale.label + " (" + q.salePct + "% off): -" + money(q.sale), "Total: " + money(q.total));
     t.push("Deposit (" + CONFIG.depositPercent + "%): " + money(q.deposit), "Due at installation: " + money(q.due));
     if (S.timeframe) t.push("", "Timeframe: " + S.timeframe);
     if (S.contactPref) t.push("Preferred contact: " + S.contactPref);
@@ -847,7 +876,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     var bx = W - M - 250;
     function tot(lbl, val, o) { o = o || {}; font(o.bold ? "bold" : "normal", o.size || 11, o.color || BLACK); txt(lbl, bx, y); txt(val, W - M - 8, y, { align: "right" }); y += o.gap || 18; }
     tot("Subtotal", money(q.subtotal));
-    if (CONFIG.sale.enabled) tot(CONFIG.sale.label + " (" + CONFIG.sale.percent + "% off)", "-" + money(q.sale), { color: GREEN });
+    if (saleOn()) tot(CONFIG.sale.label + " (" + q.salePct + "% off)", "-" + money(q.sale), { color: GREEN });
     doc.setDrawColor(148, 163, 184); doc.line(bx, y - 10, W - M, y - 10); y += 4;
     tot("TOTAL", money(q.total), { bold: true, size: 14, gap: 20 });
     tot("Deposit to order (" + CONFIG.depositPercent + "%)", money(q.deposit));
@@ -873,7 +902,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     var html = "<!doctype html><html><head><meta charset=\"utf-8\"><title>Quote " + esc(S.quoteId) + "</title><style>body{font-family:Arial,sans-serif;color:#111;margin:32px}h1{margin:0}table{width:100%;border-collapse:collapse;margin:12px 0}td{padding:6px 0;border-bottom:1px solid #ddd;vertical-align:top}td:last-child{text-align:right}small{color:#666}.t td{font-weight:bold;font-size:18px}</style></head><body>" +
       "<h1>" + esc(CONFIG.companyName) + "</h1><p>Pre-Certified Carport Quote #" + esc(S.quoteId) + " - " + esc(S.quoteDate) + "<br>" + esc([S.name, S.phone, S.email].filter(Boolean).join(" | ")) + "</p>" +
       "<h3>Your building</h3><table>" + specs + "</table><h3>Price breakdown</h3><table>" + rows +
-      "<tr><td>Subtotal</td><td>" + money(q.subtotal) + "</td></tr>" + (CONFIG.sale.enabled ? "<tr><td>" + esc(CONFIG.sale.label) + " (" + CONFIG.sale.percent + "% off)</td><td>-" + money(q.sale) + "</td></tr>" : "") +
+      "<tr><td>Subtotal</td><td>" + money(q.subtotal) + "</td></tr>" + (saleOn() ? "<tr><td>" + esc(CONFIG.sale.label) + " (" + q.salePct + "% off)</td><td>-" + money(q.sale) + "</td></tr>" : "") +
       "<tr class=\"t\"><td>Total</td><td>" + money(q.total) + "</td></tr><tr><td>Deposit (" + CONFIG.depositPercent + "%)</td><td>" + money(q.deposit) + "</td></tr><tr><td>Due at installation</td><td>" + money(q.due) + "</td></tr></table>" +
       "<p><small>" + esc(CONFIG.disclaimer) + "</small></p></body></html>";
     var fr = document.createElement("iframe");
@@ -928,7 +957,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
   function footHTML(q, idx, total) {
     var cur = S.step, price;
     if (!q.hasSize) price = '<span class="skq-fp-l">Your price</span><span class="skq-fp-n">Pick a size to see your price</span>';
-    else price = '<span class="skq-fp-l">' + (q.complete ? "Your price" : "Starting at") + (CONFIG.sale.enabled ? " \u00b7 " + esc(CONFIG.sale.label) + " applied" : "") + '</span><span class="skq-fp-v" aria-live="polite">' + money(q.total) + (CONFIG.sale.enabled ? "<s>" + money(q.subtotal) + "</s>" : "") + "</span>";
+    else price = '<span class="skq-fp-l">' + (q.complete ? "Your price" : "Starting at") + (saleOn() ? " \u00b7 " + esc(CONFIG.sale.label) + " applied" : "") + '</span><span class="skq-fp-v" aria-live="polite">' + money(q.total) + (saleOn() ? "<s>" + money(q.subtotal) + "</s>" : "") + "</span>";
     if (cur === "intro") return '<div class="skq-foot-price"></div>';
     var nav = "", editing = S.reachedQuote ? (cur !== "contact" ? cur !== "quote" : false) : false;
     if (idx > 0) nav += '<button type="button" class="skq-btn skq-btn-g' + (editing ? " skq-hide-sm" : "") + '" data-act="back">Back</button>';
@@ -1134,7 +1163,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     var style = el.getAttribute("data-style") || "card";
     var btn = '<button type="button" class="skq-btn skq-btn-p skq-btn-lg" data-skq-open="1">' + esc(CONFIG.launchButtonText) + ' <span aria-hidden="true">→</span></button>';
     if (style === "button") el.innerHTML = '<div class="skq-launch is-btn">' + btn + "</div>";
-    else el.innerHTML = '<div class="skq-launch"><div><div class="skq-launch-k">Instant online pricing</div><div class="skq-launch-h">' + esc(CONFIG.launchHeadline) + '</div><div class="skq-launch-p">' + esc(CONFIG.launchText) + '</div><ul class="skq-launch-list"><li>About 2 minutes</li><li>Itemized price</li><li>Free PDF quote</li></ul>' + btn + '</div><div class="skq-launch-art" aria-hidden="true">' + buildingSVG({ width: 20, length: 30, height: 10, sidewalls: 0, endwalls: 0, garageDoors: {}, roofColor: "Barn Red", trimColor: "White" }) + "</div></div>";
+    else el.innerHTML = '<div class="skq-launch"><div><div class="skq-launch-k">Instant online pricing</div><div class="skq-launch-h">' + esc(CONFIG.launchHeadline) + '</div><div class="skq-launch-p">' + esc(CONFIG.launchText) + '</div><ul class="skq-launch-list">' + (saleOn() ? "<li><b>" + esc(CONFIG.sale.label) + ": up to " + maxSalePct() + "% off" + (CONFIG.sale.endsOn ? " through " + esc(saleEndText().replace(/, \d{4}$/, "")) : "") + "</b></li>" : "") + '<li>About 2 minutes</li><li>Itemized price</li><li>Free PDF quote</li></ul>' + btn + '</div><div class="skq-launch-art" aria-hidden="true">' + buildingSVG({ width: 20, length: 30, height: 10, sidewalls: 0, endwalls: 0, garageDoors: {}, roofColor: "Barn Red", trimColor: "White" }) + "</div></div>";
   }
   function mountAll() { Array.prototype.forEach.call(document.querySelectorAll(".skq-embed"), mountEmbed); }
   document.addEventListener("click", function (e) {
@@ -1144,7 +1173,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     open();
   }, true);
   window.addEventListener("hashchange", function () { if (window.location.hash === HASH) open(); });
-  window.SkylinerQuote = { open: open, close: close, mountAll: mountAll, price: priceQuote, config: CONFIG, prices: PRICES, _state: function () { return S; }, _setState: function (o) { S = sanitize(o); save(); if (shell) render(); } };
+  window.SkylinerQuote = { open: open, close: close, mountAll: mountAll, price: function (o) { return priceQuote(Object.assign(freshState(), o)); }, config: CONFIG, prices: PRICES, _state: function () { return S; }, _setState: function (o) { S = sanitize(o); save(); if (shell) render(); } };
   function boot() { mountAll(); if (window.location.hash === HASH) open(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();

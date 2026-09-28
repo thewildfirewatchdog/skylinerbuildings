@@ -54,7 +54,7 @@ Open the file and find **section 1, YOUR SETTINGS**. Change the text between the
 | `phone` | Your phone number. Adds a "Call us" button on the quote. |
 | `email` | Your sales email. Adds an "Email this quote to us" button. |
 | `leadWebhookUrl` | **Important.** Where customer contact info is sent. See below. |
-| `sale` | The sale banner. Set `enabled: false` to turn it off, or change `percent` and `label`. |
+| `sale` | The Fall Sale: 5% off under $5,000, 10% off $5,000 to $14,999, 15% off $15,000 and up. `endsOn` is the last day, and the sale turns itself off after it. Change `tiers`, `label`, or `endsOn` for the next sale, or set `enabled: false`. |
 | `depositPercent` | The deposit shown on the quote (10 right now). |
 | `requireContactInfo` | `true` means customers must enter name, phone, and email before they see the price. `false` shows a "Skip" button. |
 | `frameOutWithEachDoor` | `true` adds a frame-out charge to every door and window automatically. |
@@ -76,7 +76,9 @@ Every completed quote is sent there with the contact info, the building details,
 
 Everything is in **section 2, PRICE BOOK**. Each table is labeled. For example, `"20x35":4795` means a 20' x 35' building costs $4,795.
 
-- `gableEnd: null` and `extraBow: null` show as **"Priced by our team"** because the old price sheet had no price for them. Put a number in (like `gableEnd: 450,`) and they'll be added to the total automatically.
+- `extraBow: null` shows as **"Priced by our team"** because there's no price on file yet. Put a number in (like `extraBow: 150,`) and it will be added to the total automatically.
+- Triple-wide (26', 28', 30') prices are in `tripleWide`. A `null` there means the sheet said NEEDS VERIFY, and customers see **"Call for price"** for that option.
+- 60' long buildings are priced as two 30' buildings (`joinedLengths`). Widths 13' to 17' are priced as 18' (`pricedAs18`).
 
 ### Two rules so Divi doesn't break the code
 1. **Don't leave empty lines** anywhere in the file.
