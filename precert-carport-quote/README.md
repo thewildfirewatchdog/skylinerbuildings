@@ -76,7 +76,7 @@ Every completed quote is sent there with the contact info, the building details,
 
 Everything is in **section 2, PRICE BOOK**. Each table is labeled. For example, `"20x35":4795` means a 20' x 35' building costs $4,795.
 
-- `extraBow: null` shows as **"Priced by our team"** because there's no price on file yet. Put a number in (like `extraBow: 150,`) and it will be added to the total automatically.
+- Extra bows are priced by building width in `extraBow`: $225 each up to 20' wide, $310 each for 22' to 30' wide.
 - Triple-wide (26', 28', 30') prices are in `tripleWide`. A `null` there means the sheet said NEEDS VERIFY, and customers see **"Call for price"** for that option.
 - 60' long buildings are priced as two 30' buildings (`joinedLengths`). Widths 13' to 17' are priced as 18' (`pricedAs18`).
 

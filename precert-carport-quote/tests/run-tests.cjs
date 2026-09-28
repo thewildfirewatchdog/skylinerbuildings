@@ -130,6 +130,8 @@ async function saleRules(browser) {
   });
   check(tiers[0][1] === 5 && tiers[1][1] === 10 && tiers[2][1] === 10 && tiers[3][1] === 15, "sale tiers: under $5k = 5%, $5k-$15k = 10%, $15k+ = 15% (" + JSON.stringify(tiers.slice(0, 4)) + ")");
   check(tiers[4][0] === 2295 + 1000 + 250, "5' roof extension $500 each and gable end $250 each are added to the price");
+  const bows = await on.evaluate(() => [12, 17, 20, 22, 24, 30].map(w => { const q = window.SkylinerQuote.price({ width: w, length: 20, height: 6, bows: 2 }); const l = q.lines.find(x => x.label.indexOf("Extra bow") === 0); return l.amount; }));
+  check(JSON.stringify(bows) === JSON.stringify([450, 450, 450, 620, 620, 620]), "extra bows: $225 each up to 20' wide, $310 each 22'-30' wide (" + bows.join(",") + " for 2 bows)");
   const ended = await wizardPage(browser, Object.assign({}, SALE_ON, { endsOn: "2020-01-01" }));
   const q = await ended.evaluate(() => window.SkylinerQuote.price({ width: 20, length: 30, height: 10 }));
   check(q.sale === 0 && q.total === q.subtotal, "sale turns itself off after its end date");

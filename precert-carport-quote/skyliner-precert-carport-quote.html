@@ -250,7 +250,10 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     clearPanel: { 12: 150, 16: 200 },                               /* skylight panel length (ft): price */
     brace: { 2: 10, 3: 15, 4: 20 },                                 /* brace size (ft): price */
     gableEnd: 250,
-    extraBow: null,            /* null = "priced by our team" (no price on file yet) */
+    extraBow: [                /* extra bow price by building width */
+      { upToWidth: 20, price: 225 },  /* up to 20' wide  */
+      { upToWidth: 30, price: 310 }   /* 22' to 30' wide */
+    ],
     roofExtension: 500,        /* 5' roof extension, each */
     groundCert: { 21: 595, 26: 695, 31: 695, 36: 795, 41: 895, 46: 995, 51: 1195, 61: 1390 }, /* building length + 1 ft (61' = two 31') */
     mobileAnchor: { installed: 35, not_installed: 30 },
@@ -369,6 +372,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
   function heightFor(w, L, h) { return isTriple(w) ? twCell(PRICES.tripleWide.heightAdd, h, lenIdx(L)) : times(PRICES.heightAdd[(joined(L) || L) + "|" + h], L); }
   function sidewallsFor(w, L, h) { return isTriple(w) ? twCell(PRICES.tripleWide.sidewallsBoth, h, lenIdx(L)) : times(PRICES.sidewallsBoth[(joined(L) || L) + "|" + h], L); }
   function endwallFor(w, h) { return isTriple(w) ? twCell(PRICES.tripleWide.endwallEach, h, PRICES.tripleWide.widths.indexOf(w)) : PRICES.endwallEach[priceW(w) + "|" + h]; }
+  function bowPrice(w) { var list = PRICES.extraBow || [], p; for (var i = list.length - 1; i >= 0; i--) { if (w <= list[i].upToWidth) p = list[i].price; } return p; }
   function todayISO() { var d = new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
   function saleOn() { return CONFIG.sale.enabled ? (CONFIG.sale.endsOn ? todayISO() <= CONFIG.sale.endsOn : true) : false; }
   function salePercent(amount) { var pct = 0; (CONFIG.sale.tiers || []).forEach(function (t) { if (amount >= t.from) pct = t.percent; }); return pct; }
@@ -454,7 +458,7 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     numKeys(P.brace).forEach(function (sz) { var q = num((s.braces || {})[sz]); if (q > 0) add("Extras", "Extra brace (" + sz + "')", q, P.brace[sz], q > 1 ? money(P.brace[sz]) + " each" : ""); });
     if (s.gables > 0) add("Extras", "Gable end" + (s.gables > 1 ? "s" : ""), s.gables, P.gableEnd, P.gableEnd === null ? "Priced by our team" : "");
     if (s.roofExt > 0) add("Extras", "5' roof extension", s.roofExt, P.roofExtension, s.roofExt > 1 ? money(P.roofExtension) + " each" : "");
-    if (s.bows > 0) add("Extras", "Extra bow" + (s.bows > 1 ? "s" : ""), s.bows, P.extraBow, P.extraBow === null ? "Priced by our team" : "");
+    if (s.bows > 0) { var bp = bowPrice(w); add("Extras", "Extra bow" + (s.bows > 1 ? "s" : "") + " (" + w + "' wide)", s.bows, bp === undefined ? null : bp, bp === undefined ? "Priced by our team" : (s.bows > 1 ? money(bp) + " each" : "")); }
     r.lines.forEach(function (l) { if (l.amount !== null) r.subtotal += l.amount; });
     r.salePct = saleOn() ? salePercent(r.subtotal) : 0;
     r.sale = Math.round(r.subtotal * r.salePct / 100);
@@ -732,7 +736,8 @@ textarea.skq-input{max-width:none;min-height:96px;resize:vertical}
     numKeys(PRICES.brace).forEach(function (sz) { out += stepper("braces." + sz, "Extra " + sz + "' braces", "Added bracing at the corners", money(PRICES.brace[sz]) + " each", { max: 20 }); });
     out += stepper("gables", "Gable ends", "Closes the triangle at the top of an open end", PRICES.gableEnd === null ? "Priced by our team" : money(PRICES.gableEnd) + " each", { max: 2, tbd: PRICES.gableEnd === null });
     out += stepper("roofExt", "5' roof extension", "Extends the roof 5 feet past the building", money(PRICES.roofExtension) + " each", { max: 2 });
-    out += stepper("bows", "Extra bows (trusses)", "Additional roof trusses", PRICES.extraBow === null ? "Priced by our team" : money(PRICES.extraBow) + " each", { max: 6, tbd: PRICES.extraBow === null }) + "</div>";
+    var bp = bowPrice(S.width);
+    out += stepper("bows", "Extra bows (trusses)", "Additional roof trusses for your " + S.width + "' wide building", bp === undefined ? "Priced by our team" : money(bp) + " each", { max: 6, tbd: bp === undefined }) + "</div>";
     return out;
   }
   function stepColors() {
