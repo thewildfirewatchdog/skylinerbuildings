@@ -29,7 +29,7 @@
      2) PRICE BOOK  -  Pre-certified, 14-gauge base prices
      ==================================================================== */
   var PRICES = {
-    widths: [12, 18, 20, 22, 24],
+    widths: [12, 18, 20, 22, 24, 26, 28, 30],
     lengths: [20, 25, 30, 35, 40, 45, 50],
     heights: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
     /* Base building (frame + roof, 6 ft legs), 14-gauge.  "width x length": price */
@@ -42,6 +42,17 @@
     /* Enclosed end wall, price for ONE end.  "width|height": price */
     endwallEach: {"12|6":730,"18|6":850,"20|6":970,"22|6":1090,"24|6":1210,"12|7":820,"18|7":940,"20|7":1060,"22|7":1200,"24|7":1320,"12|8":910,"18|8":1030,"20|8":1150,"22|8":1270,"24|8":1390,"12|9":1000,"18|9":1120,"20|9":1240,"22|9":1360,"24|9":1480,"12|10":1090,"18|10":1220,"20|10":1330,"22|10":1450,"24|10":1570,"12|11":1180,"18|11":1300,"20|11":1420,"22|11":1540,"24|11":1660,"12|12":1270,"18|12":1390,"20|12":1510,"22|12":1700,"24|12":1750,"12|13":1360,"18|13":1480,"20|13":1600,"22|13":1890,"24|13":1910,"12|14":1450,"18|14":1600,"20|14":1770,"22|14":1930,"24|14":2100,"12|15":1685,"18|15":2120,"20|15":2550,"22|15":2980,"24|15":3370,"12|16":1830,"18|16":2290,"20|16":2880,"22|16":3220,"24|16":3665,"12|17":1980,"18|17":2480,"20|17":2990,"22|17":3480,"24|17":3960,"12|18":2120,"18|18":2650,"20|18":3210,"22|18":3730,"24|18":4240,"12|19":2310,"18|19":2840,"20|19":3420,"22|19":3970,"24|19":4530,"12|20":2460,"18|20":3060,"20|20":3630,"22|20":4230,"24|20":4810},
     snowLoad: { standard: 0, "60": 3240 },
+    /* TRIPLE WIDE 26' / 28' / 30'  (from the "Certified 40LB + Triple Wide" sheets)
+       Each list below = prices for building lengths [20, 25, 30, 35, 40, 45, 50].
+       null = marked NEEDS VERIFY on the sheet -> the customer sees "Call for price". */
+    tripleWide: {
+      widths: [26, 28, 30],
+      base14: {"26x20":4695,"26x25":5395,"26x30":6395,"26x35":7395,"26x40":8295,"26x45":9195,"26x50":9995,"28x20":4995,"28x25":5795,"28x30":6695,"28x35":7695,"28x40":8595,"28x45":9495,"28x50":10495,"30x20":5095,"30x25":5895,"30x30":6995,"30x35":7995,"30x40":8995,"30x45":9995,"30x50":10795},
+      heightAdd: {6:[0,0,0,0,0,0,0],7:[100,115,140,160,180,200,220],8:[230,275,310,370,420,470,520],9:[340,420,470,560,630,700,770],10:[540,640,700,840,950,1060,1160],11:[680,820,900,1080,1220,1360,1490],12:[840,1010,1105,1325,1495,1670,1825],13:[1085,1305,1425,1710,1935,2155,2360],14:[1335,1605,1755,2105,2385,2650,2900],15:[1785,2145,2350,2815,3185,3545,3880],16:[2175,2615,2860,3430,3880,4320,4730],17:[null,3210,3510,4210,4760,5300,5800],18:[2830,3405,3725,4465,5050,5620,6150],19:[null,3485,3810,4570,5165,5745,6290],20:[null,3485,3810,4780,5285,5815,6360]},       /* leg height: price list by length */
+      sidewallsBoth: {6:[580,700,845,990,1140,1280,1420],7:[820,985,1230,1350,1620,null,1860],8:[850,1170,1420,1735,1960,2275,2310],9:[1065,1325,1610,1870,2180,2305,2800],10:[1240,null,1905,2255,2620,2795,3240],11:[1380,1715,2080,2960,3305,3555,4050],12:[1590,2035,2390,3095,null,null,null]}, /* both sides: sheet stops at 12' legs */
+      endwallEach: {6:[1690,1850,null],7:[1645,1810,1990],8:[1765,1945,2125],9:[1885,2070,2260],10:[2010,2200,2400],11:[2130,2340,2530],12:[2255,2460,2670],13:[2380,2600,2810],14:[2605,2850,3085],15:[3465,3620,3770],16:[3600,3750,3900],17:[4970,5180,5390],18:[5660,5895,6125],19:[6340,6620,6910],20:[6995,7300,7600]},     /* one end, by leg height: [26' wide, 28' wide, 30' wide] */
+      snowLoad: { "60": [3240,3640,3740,3940,4140,4340,4490] }
+    },
     garageDoors: {             /* roll-up doors: width (ft), height (ft), price */
       "8x7": { w: 8, h: 7, price: 895 },
       "9x8": { w: 9, h: 8, price: 895 },
@@ -164,12 +175,28 @@
   }
   function save() { try { window.localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* storage blocked - fine */ } }
   var S = load() || freshState();
+  /* ---------------- price lookups (undefined = not on the price sheet -> call for price) ---------------- */
+  function isTriple(w) { return isIn(w, PRICES.tripleWide.widths); }
+  function lenIdx(L) { return PRICES.lengths.indexOf(L); }
+  function twCell(rows, h, i) { var row = rows[h]; if (!row) return undefined; var v = row[i]; return v === null ? undefined : v; }
+  function baseFor(w, L) { return isTriple(w) ? PRICES.tripleWide.base14[w + "x" + L] : PRICES.base14[w + "x" + L]; }
+  function heightFor(w, L, h) { return isTriple(w) ? twCell(PRICES.tripleWide.heightAdd, h, lenIdx(L)) : PRICES.heightAdd[L + "|" + h]; }
+  function sidewallsFor(w, L, h) { return isTriple(w) ? twCell(PRICES.tripleWide.sidewallsBoth, h, lenIdx(L)) : PRICES.sidewallsBoth[L + "|" + h]; }
+  function endwallFor(w, h) { return isTriple(w) ? twCell(PRICES.tripleWide.endwallEach, h, PRICES.tripleWide.widths.indexOf(w)) : PRICES.endwallEach[w + "|" + h]; }
+  function snowFor(w, L, k) {
+    if (!PRICES.snowLoad[k]) return 0;
+    if (!isTriple(w)) return PRICES.snowLoad[k];
+    var list = PRICES.tripleWide.snowLoad[k];
+    return list ? (list[lenIdx(L)] === null ? undefined : list[lenIdx(L)]) : undefined;
+  }
+  function firstBlocker(s, step) { var b = priceQuote(s).blockers; for (var i = 0; i < b.length; i++) { if (b[i].step === step) return b[i].msg; } return ""; }
+  var CALL = "Call for price";
   /* ---------------- pricing engine ---------------- */
   function priceQuote(s) {
     var P = PRICES, w = s.width, L = s.length, h = s.height || P.heights[0];
-    var r = { lines: [], tbd: [], warnings: [], subtotal: 0, sale: 0, total: 0, deposit: 0, due: 0, hasSize: false, complete: false };
+    var r = { lines: [], tbd: [], warnings: [], blockers: [], subtotal: 0, sale: 0, total: 0, deposit: 0, due: 0, hasSize: false, complete: false };
     if (!w || !L) return r;
-    var base14 = P.base14[w + "x" + L];
+    var base14 = baseFor(w, L);
     if (base14 === undefined) { r.warnings.push("We don't have a price on file for " + w + "' x " + L + "'."); return r; }
     r.hasSize = true;
     r.complete = Boolean(s.height);
@@ -179,12 +206,23 @@
     }
     add("Building", w + "' x " + L + "' pre-certified frame and roof", 1, base14, CONFIG.roofStyleName + ", 14-gauge, 6' legs");
     if (s.gauge === "12") add("Building", "12-gauge frame upgrade", 1, Math.round(base14 * (1 + P.gauge12Percent / 100)) - base14, "Heavier-duty steel (+" + P.gauge12Percent + "% of building)");
-    var hAdd = P.heightAdd[L + "|" + h] || 0;
-    if (hAdd > 0) add("Building", h + "' leg height", 1, hAdd, "Upgrade from 6' standard legs");
-    var snow = P.snowLoad[s.snow] || 0;
-    if (snow > 0) add("Building", s.snow + " lb snow load rating", 1, snow, "");
-    if (s.sidewalls === 2) add("Walls", "Enclosed sidewalls (both sides)", 1, P.sidewallsBoth[L + "|" + h], L + "' long x " + h + "' tall");
-    if (s.endwalls > 0) add("Walls", s.endwalls === 2 ? "Enclosed end walls (both ends)" : "Enclosed end wall (one end)", s.endwalls, P.endwallEach[w + "|" + h], w + "' wide x " + h + "' tall" + (s.endwalls === 2 ? ", " + money(P.endwallEach[w + "|" + h]) + " each" : ""));
+    var callMsg = " needs a custom price for this size. Please call us, or pick a different option.";
+    var hAdd = heightFor(w, L, h);
+    if (hAdd === undefined) r.blockers.push({ step: "height", msg: h + "' legs on a " + w + "' x " + L + "' building" + callMsg });
+    else if (hAdd > 0) add("Building", h + "' leg height", 1, hAdd, "Upgrade from 6' standard legs");
+    var snow = snowFor(w, L, s.snow);
+    if (snow === undefined) r.blockers.push({ step: "strength", msg: "The " + s.snow + " lb snow load" + callMsg });
+    else if (snow > 0) add("Building", s.snow + " lb snow load rating", 1, snow, "");
+    if (s.sidewalls === 2) {
+      var sw = sidewallsFor(w, L, h);
+      if (sw === undefined) r.blockers.push({ step: "walls", msg: "Enclosed sidewalls with " + h + "' legs" + callMsg });
+      else add("Walls", "Enclosed sidewalls (both sides)", 1, sw, L + "' long x " + h + "' tall");
+    }
+    if (s.endwalls > 0) {
+      var ew = endwallFor(w, h);
+      if (ew === undefined) r.blockers.push({ step: "walls", msg: "Enclosed end walls with " + h + "' legs" + callMsg });
+      else add("Walls", s.endwalls === 2 ? "Enclosed end walls (both ends)" : "Enclosed end wall (one end)", s.endwalls, ew, w + "' wide x " + h + "' tall" + (s.endwalls === 2 ? ", " + money(ew) + " each" : ""));
+    }
     if (hasWalls(s)) {
       Object.keys(P.garageDoors).forEach(function (k) {
         var q = num(s.garageDoors[k]), d = P.garageDoors[k];
@@ -359,9 +397,9 @@
   var STEPS = [
     { id: "site", nav: "Location", title: "Where is your building going?", sub: "This helps us match the right certification and anchoring for your site.", html: stepSite, check: checkSite },
     { id: "size", nav: "Size", title: "How big do you need it?", sub: "Width is side to side. Length is front to back.", html: stepSize, check: function (s) { return !s.width ? "Please pick a width." : (!s.length ? "Please pick a length." : ""); } },
-    { id: "height", nav: "Height", title: "How tall should the legs be?", sub: "Leg height is measured from the ground to where the roof starts. Taller legs mean more clearance.", html: stepHeight, check: function (s) { return s.height ? "" : "Please pick a leg height."; } },
-    { id: "strength", nav: "Strength", title: "Frame strength and snow load", sub: "Every building in this program is pre-certified. Choose extra strength if you need it.", html: stepStrength, check: function () { return ""; } },
-    { id: "walls", nav: "Walls", title: "Do you want any walls?", sub: "Leave it open as a carport, or enclose it all the way into a garage.", html: stepWalls, check: function () { return ""; } },
+    { id: "height", nav: "Height", title: "How tall should the legs be?", sub: "Leg height is measured from the ground to where the roof starts. Taller legs mean more clearance.", html: stepHeight, check: function (s) { return s.height ? firstBlocker(s, "height") : "Please pick a leg height."; } },
+    { id: "strength", nav: "Strength", title: "Frame strength and snow load", sub: "Every building in this program is pre-certified. Choose extra strength if you need it.", html: stepStrength, check: function (s) { return firstBlocker(s, "strength"); } },
+    { id: "walls", nav: "Walls", title: "Do you want any walls?", sub: "Leave it open as a carport, or enclose it all the way into a garage.", html: stepWalls, check: function (s) { return firstBlocker(s, "walls"); } },
     { id: "openings", nav: "Doors", title: "Doors and windows", sub: "Add roll-up doors, walk-in doors, and windows to your walls. Skip this if you don't need any.", html: stepOpenings, check: checkOpenings, show: hasWalls },
     { id: "anchors", nav: "Anchoring", title: "Anchoring and certification", sub: "How your building is tied down is a big part of certification.", html: stepAnchors, check: function (s) { return isIn(s.surface, GROUND_SURFACES) ? (s.groundCert ? "" : "Please answer the ground certification question.") : ""; } },
     { id: "extras", nav: "Extras", title: "Anything extra?", sub: "Optional add-ons. Skip this step if you don't need any.", html: stepExtras, check: function () { return ""; } },
@@ -400,13 +438,16 @@
   }
   function stepSize() {
     var L = S.length || PRICES.lengths[0], wref = S.width || PRICES.widths[0];
-    var wOpts = PRICES.widths.map(function (w) { return { value: w, label: w + "' wide", sub: "", price: (S.length ? "" : "from ") + money(PRICES.base14[w + "x" + L]) }; });
-    var lOpts = PRICES.lengths.map(function (l) { return { value: l, label: l + "' long", sub: "", price: (S.width ? "" : "from ") + money(PRICES.base14[wref + "x" + l]) }; });
+    var wOpts = PRICES.widths.map(function (w) { return { value: w, label: w + "' wide", sub: isTriple(w) ? "Triple wide" : "", price: (S.length ? "" : "from ") + money(baseFor(w, L)) }; });
+    var lOpts = PRICES.lengths.map(function (l) { return { value: l, label: l + "' long", sub: "", price: (S.width ? "" : "from ") + money(baseFor(wref, l)) }; });
     return '<div class="skq-q"><div class="skq-label">Width</div>' + choice("width", wOpts, S.width, "", "Width") + "</div>" +
       '<div class="skq-q"><div class="skq-label">Length</div>' + choice("length", lOpts, S.length, "", "Length") + "</div>";
   }
   function stepHeight() {
     var opts = PRICES.heights.map(function (h) {
+      var off = heightFor(S.width, S.length, h) === undefined;
+      var wallOff = (S.sidewalls === 2 ? sidewallsFor(S.width, S.length, h) === undefined : false) || (S.endwalls > 0 ? endwallFor(S.width, h) === undefined : false);
+      if (off || wallOff) return { value: h, label: h + "' legs", sub: wallOff ? (off ? "" : "With your walls") : "", price: CALL, disabled: true };
       var d = delta({ height: h }, { height: PRICES.heights[0] });
       return { value: h, label: h + "' legs", sub: "", price: plus(d) };
     });
@@ -417,7 +458,8 @@
   function stepStrength() {
     var g12 = delta({ gauge: "12" }, { gauge: "14" });
     var snowOpts = Object.keys(PRICES.snowLoad).map(function (k) {
-      return k === "standard" ? { value: k, label: "Standard", sub: "Standard certified rating", price: "Included" } : { value: k, label: k + " lb snow load", sub: "For areas with heavy snow", price: plus(PRICES.snowLoad[k]) };
+      var sp = snowFor(S.width, S.length, k);
+      return k === "standard" ? { value: k, label: "Standard", sub: "Standard certified rating", price: "Included" } : { value: k, label: k + " lb snow load", sub: "For areas with heavy snow", price: sp === undefined ? CALL : plus(sp), disabled: sp === undefined };
     });
     return '<div class="skq-q"><div class="skq-label">Frame steel</div>' + choice("gauge", [
       { value: "14", label: "14-gauge", sub: "Standard certified frame", price: "Included" },
@@ -429,19 +471,20 @@
     var presets = [["Open carport", 0, 0], ["Both sides", 2, 0], ["Sides + one end", 2, 1], ["Fully enclosed", 2, 2]];
     var side = delta({ sidewalls: 2 }, { sidewalls: 0 });
     var e1 = delta({ endwalls: 1 }, { endwalls: 0 }), e2 = delta({ endwalls: 2 }, { endwalls: 0 });
+    var sideOff = sidewallsFor(S.width, S.length, S.height) === undefined, endOff = endwallFor(S.width, S.height) === undefined;
     return '<div class="skq-mpv">' + buildingSVG(S, { height: 170 }) + "</div>" +
       '<div class="skq-label">Quick picks</div><div class="skq-presets">' + presets.map(function (p) {
-        var sel = S.sidewalls === p[1] ? S.endwalls === p[2] : false;
-        return '<button type="button" class="skq-chip' + (sel ? " is-sel" : "") + '" data-act="preset" data-side="' + p[1] + '" data-end="' + p[2] + '">' + p[0] + (p[1] + p[2] ? " (" + plus(delta({ sidewalls: p[1], endwalls: p[2] }, { sidewalls: 0, endwalls: 0 })) + ")" : "") + "</button>";
+        var sel = S.sidewalls === p[1] ? S.endwalls === p[2] : false, pOff = (p[1] ? sideOff : false) || (p[2] ? endOff : false);
+        return '<button type="button" class="skq-chip' + (sel ? " is-sel" : "") + '" data-act="preset" data-side="' + p[1] + '" data-end="' + p[2] + '"' + (pOff ? ' disabled style="opacity:.4"' : "") + ">" + p[0] + (p[1] + p[2] ? " (" + plus(delta({ sidewalls: p[1], endwalls: p[2] }, { sidewalls: 0, endwalls: 0 })) + ")" : "") + "</button>";
       }).join("") + "</div>" +
       '<div class="skq-q"><div class="skq-label">Sidewalls (the long sides)</div>' + choice("sidewalls", [
         { value: 0, label: "Open", sub: "No sidewalls", price: "Included" },
-        { value: 2, label: "Both sides enclosed", sub: S.length + "' long x " + S.height + "' tall", price: plus(side) }
+        sidewallsFor(S.width, S.length, S.height) === undefined ? { value: 2, label: "Both sides enclosed", sub: "Not on our price sheet with " + S.height + "' legs", price: CALL, disabled: true } : { value: 2, label: "Both sides enclosed", sub: S.length + "' long x " + S.height + "' tall", price: plus(side) }
       ], S.sidewalls, "skq-c-lg", "Sidewalls") + "</div>" +
       '<div class="skq-q"><div class="skq-label">End walls (the short ends)</div>' + choice("endwalls", [
         { value: 0, label: "Open", sub: "No end walls", price: "Included" },
-        { value: 1, label: "One end", sub: S.width + "' wide x " + S.height + "' tall", price: plus(e1) },
-        { value: 2, label: "Both ends", sub: "Fully closed ends", price: plus(e2) }
+        { value: 1, label: "One end", sub: S.width + "' wide x " + S.height + "' tall", price: endOff ? CALL : plus(e1), disabled: endOff },
+        { value: 2, label: "Both ends", sub: "Fully closed ends", price: endOff ? CALL : plus(e2), disabled: endOff }
       ], S.endwalls, "", "End walls") + "</div>";
   }
   function stepOpenings() {
@@ -715,7 +758,7 @@
   function footHTML(q, idx, total) {
     var cur = S.step, price;
     if (!q.hasSize) price = '<span class="skq-fp-l">Your price</span><span class="skq-fp-n">Pick a size to see your price</span>';
-    else price = '<span class="skq-fp-l">' + (q.complete ? "Your price" : "Starting at") + (CONFIG.sale.enabled ? " with " + esc(CONFIG.sale.label) : "") + '</span><span class="skq-fp-v" aria-live="polite">' + money(q.total) + (CONFIG.sale.enabled ? "<s>" + money(q.subtotal) + "</s>" : "") + "</span>";
+    else price = '<span class="skq-fp-l">' + (q.complete ? "Your price" : "Starting at") + (CONFIG.sale.enabled ? " \u00b7 " + esc(CONFIG.sale.label) + " applied" : "") + '</span><span class="skq-fp-v" aria-live="polite">' + money(q.total) + (CONFIG.sale.enabled ? "<s>" + money(q.subtotal) + "</s>" : "") + "</span>";
     if (cur === "intro") return '<div class="skq-foot-price"></div>';
     var nav = "", editing = S.reachedQuote ? (cur !== "contact" ? cur !== "quote" : false) : false;
     if (idx > 0) nav += '<button type="button" class="skq-btn skq-btn-g' + (editing ? " skq-hide-sm" : "") + '" data-act="back">Back</button>';

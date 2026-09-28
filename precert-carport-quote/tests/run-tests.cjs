@@ -11,7 +11,8 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const WIZARD = fs.readFileSync(path.join(ROOT, "precert-carport-quote", "skyliner-precert-carport-quote.html"), "utf8");
-const OLD = fs.readFileSync(path.join(ROOT, "hm-12-24-pre-cert"), "utf8");
+// Reference calculator: hm-12-24-pre-cert plus the triple-wide (26/28/30) sheets, from branch claude/charming-shannon-nglira
+const OLD = fs.readFileSync(path.join(__dirname, "fixtures", "hm-triple-wide-reference.html"), "utf8");
 const SHOTS = path.join(__dirname, "screenshots");
 fs.mkdirSync(SHOTS, { recursive: true });
 
@@ -56,10 +57,10 @@ async function priceParity(browser) {
   await oldPage.setContent(`<!doctype html><html><body>${OLD}</body></html>`);
   const newPage = await browser.newPage();
   await newPage.setContent(`<!doctype html><html><body>${WIZARD}</body></html>`);
-  let mismatches = 0;
-  for (let i = 0; i < 400; i++) {
+  let mismatches = 0, callForPrice = 0;
+  for (let i = 0; i < 1500; i++) {
     const c = {
-      gauge: rand(["14", "12"]), w: rand([12, 18, 20, 22, 24]), L: rand([20, 25, 30, 35, 40, 45, 50]), h: rand([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]),
+      gauge: rand(["14", "12"]), w: rand([12, 18, 20, 22, 24, 26, 28, 30]), L: rand([20, 25, 30, 35, 40, 45, 50]), h: rand([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]),
       snow: rand(["standard", "60"]), side: rand([0, 2]), end: rand([0, 1, 2]),
       xp: rand([0, 1, 2, 5]), xpl: rand([21, 26, 31, 36, 41]), cp: rand([0, 1, 4]), cpl: rand([12, 16]),
       gd: rand([0, 1, 3]), gds: rand(["8x7", "9x8", "10x8", "10x10"]), wi: rand([0, 1, 2]), win: rand([0, 1, 4]),
@@ -77,7 +78,8 @@ async function priceParity(browser) {
       set("brace_qty", c.br); set("brace_size", c.brs); set("ground_cert_qty", c.gc); set("ground_cert_length", c.L + 1);
       document.getElementById("ground_cert_doubleleg").checked = c.dl;
       set("mobile_anchor_qty", c.ma); set("mobile_anchor_install", c.mai); set("concrete_bolt_qty", c.cb);
-      return calcQuote().total; // eslint-disable-line no-undef
+      const r = calcQuote(); // eslint-disable-line no-undef
+      return r.ok ? r.total : null;
     }, c);
     const q = await newPage.evaluate((c) => {
       const gd = {}; gd[c.gds] = c.gd; const br = {}; br[c.brs] = c.br;
@@ -88,12 +90,14 @@ async function priceParity(browser) {
         extraPanels: c.xp, extraPanelLen: c.xpl, clearPanels: c.cp, clearPanelLen: c.cpl, braces: br, gables: 0, bows: 0
       });
     }, c);
+    if (oldTotal === null) { callForPrice++; if (!q.blockers.length) { mismatches++; console.log("   should be call-for-price", JSON.stringify(c)); } continue; }
+    if (q.blockers.length) { mismatches++; console.log("   unexpected call-for-price", JSON.stringify(c), q.blockers); continue; }
     if (q.subtotal !== oldTotal) { mismatches++; if (mismatches < 5) console.log("   mismatch", JSON.stringify(c), "old", oldTotal, "new", q.subtotal); }
     // sale/deposit math must match the old PDF math exactly
     const disc = Math.round(oldTotal * 0.10), after = oldTotal - disc, dep = Math.round(after * 0.10);
     if (q.total !== after || q.deposit !== dep || q.due !== after - dep) { mismatches++; console.log("   sale/deposit mismatch", oldTotal, q); }
   }
-  check(mismatches === 0, "400 random buildings priced identically to the old calculator (subtotal, sale, deposit, due)");
+  check(mismatches === 0, `1500 random buildings (12'-30' wide) match the reference calculator; ${callForPrice} unpriced sheet cells correctly show "Call for price"`);
   await oldPage.close(); await newPage.close();
 }
 

@@ -109,4 +109,4 @@ npm install --no-save jspdf@2.5.1
 cd ../..
 NODE_PATH=$(npm root -g) node precert-carport-quote/tests/run-tests.cjs
 ```
-The tests check 400 random buildings against the old calculator (`hm-12-24-pre-cert`). They also click through the whole questionnaire on desktop and phone inside a fake Divi page, and download the PDF.
+The tests check 1,500 random buildings (12' to 30' wide) against the reference calculator in `tests/fixtures/`, which includes the triple-wide sheets. They also click through the whole questionnaire on desktop and phone inside a fake Divi page, and download the PDF.
